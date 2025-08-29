@@ -44,22 +44,25 @@ const MainSettings = ({ settings, store, runStore }) => {
     setLeague(e.target.value);
   };
 
-  const leagueOptions = store.characters.map((character: any) => character.league)
-    .filter((league, index) => store.characters.findIndex((char: any) => char.league === league) === index)
+  const leagueOptions = store.characters
+    .map((character: any) => character.league)
+    .filter(
+      (league, index) => store.characters.findIndex((char: any) => char.league === league) === index
+    )
     .map((league) => (
-    <MenuItem key={league} value={league}>
-      {league}
-    </MenuItem>
-  ));
+      <MenuItem key={league} value={league}>
+        {league}
+      </MenuItem>
+    ));
 
   const charactersOptions = store.characters
     .filter((character: any) => character.league === league)
     .map((character: any) => (
-    <MenuItem key={character.name} value={character.name}>
-      {character.name} (Level {character.level}) {character.class}{' '}
-      {character.current ? '(Last Active)' : ''}
-    </MenuItem>
-  ));
+      <MenuItem key={character.name} value={character.name}>
+        {character.name} (Level {character.level}) {character.class}{' '}
+        {character.current ? '(Last Active)' : ''}
+      </MenuItem>
+    ));
 
   // Client File Location
   const [clientFileLocation, setClientFileLocation] = React.useState(settings.clientTxt);
@@ -178,7 +181,6 @@ const MainSettings = ({ settings, store, runStore }) => {
         </div>
         <div className="Settings__Row Settings__Character-Select">
           <Select
-            
             label="League"
             id="league"
             variant="filled"
@@ -190,7 +192,6 @@ const MainSettings = ({ settings, store, runStore }) => {
             {leagueOptions}
           </Select>
           <Select
-            
             label="Character"
             id="character"
             variant="filled"

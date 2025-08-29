@@ -49,7 +49,10 @@ const RunNavigation = ({ run, store }) => {
         })}
       </Select>
       <Tooltip title="Reprocess this Run">
-        <RefreshIcon className="Run__Navigation__RefreshIcon" onClick={() => store.reprocessRun(run)} />
+        <RefreshIcon
+          className="Run__Navigation__RefreshIcon"
+          onClick={() => store.reprocessRun(run)}
+        />
       </Tooltip>
       <Link
         component={RouterLink}

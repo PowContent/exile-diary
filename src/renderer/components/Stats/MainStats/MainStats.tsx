@@ -283,17 +283,17 @@ const MainStats = ({ stats }) => {
             <div className="Main-Stat__Text">
               Time Spent in Incursion rooms in maps:{' '}
               <span className="Main-Stat__Value">{stats.misc.incursion.unlocks.time.total}</span>sec
-              (max: <span className="Main-Stat__Value">{stats.misc.incursion.unlocks.time.max}</span>sec | min: <span className="Main-Stat__Value">{stats.misc.incursion.unlocks.time.min}</span>sec)
+              (max:{' '}
+              <span className="Main-Stat__Value">{stats.misc.incursion.unlocks.time.max}</span>sec |
+              min: <span className="Main-Stat__Value">{stats.misc.incursion.unlocks.time.min}</span>
+              sec)
             </div>
           </div>
           <div className="Main-Stat">
             <div className="Main-Stat__Text">
               Temple Runs:{' '}
-              <span className="Main-Stat__Value">{stats.misc.incursion.rooms.temples}</span> (
-              T3 Rooms:{' '}<span className="Main-Stat__Value">
-                {stats.misc.incursion.rooms.count}
-              </span>
-              )
+              <span className="Main-Stat__Value">{stats.misc.incursion.rooms.temples}</span> ( T3
+              Rooms: <span className="Main-Stat__Value">{stats.misc.incursion.rooms.count}</span>)
             </div>
           </div>
         </div>
@@ -312,13 +312,17 @@ const MainStats = ({ stats }) => {
             <div className="Main-Stat__Text">
               Time Spent Crafting:{' '}
               <span className="Main-Stat__Value">{stats.misc.bestiary.crafted.time.total}</span>sec
-              (max: <span className="Main-Stat__Value">{stats.misc.bestiary.crafted.time.max}</span>sec | min: <span className="Main-Stat__Value">{stats.misc.bestiary.crafted.time.min}</span>sec)
+              (max: <span className="Main-Stat__Value">{stats.misc.bestiary.crafted.time.max}</span>
+              sec | min:{' '}
+              <span className="Main-Stat__Value">{stats.misc.bestiary.crafted.time.min}</span>sec)
             </div>
           </div>
           <div className="Main-Stat">
             <div className="Main-Stat__Text">
               Captured Beasts:
-              <span className="Main-Stat__Value">{stats.misc.bestiary.captured.red + stats.misc.bestiary.captured.yellow}</span>
+              <span className="Main-Stat__Value">
+                {stats.misc.bestiary.captured.red + stats.misc.bestiary.captured.yellow}
+              </span>
               <span className="Main-Stat__Value--Beasts">
                 (
                 <img
@@ -343,8 +347,7 @@ const MainStats = ({ stats }) => {
           </div>
           <div className="Main-Stat">
             <div className="Main-Stat__Text">
-              Niko Encounters:{' '}
-              <span className="Main-Stat__Value">{stats.misc.delve.niko}</span>
+              Niko Encounters: <span className="Main-Stat__Value">{stats.misc.delve.niko}</span>
             </div>
           </div>
           <div className="Main-Stat">

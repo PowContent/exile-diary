@@ -58,7 +58,9 @@ const iconMap = {
         <div>Encountered {Object.keys(info?.betrayal?.fights).length} Betrayal Members</div>
         <ul className="Tooltip-List">
           {info?.betrayal?.fights.map((fight) => (
-            <li>{fight.npc} - {Case.capital(fight.action)}</li>
+            <li>
+              {fight.npc} - {Case.capital(fight.action)}
+            </li>
           ))}
         </ul>
       </>
@@ -74,10 +76,22 @@ const iconMap = {
     return {
       condition: !!info.betrayal?.bossFights,
       icon: CatarinaIcon,
-      alt: `Contained a Betrayal Boss Fight.\nFight lasted ${dayjs(info.betrayal?.bossFights[0].started).diff(dayjs(info.betrayal?.bossFights[info.betrayal?.bossFights.length - 1]?.finished), 'seconds')} seconds`,
+      alt: `Contained a Betrayal Boss Fight.\nFight lasted ${dayjs(
+        info.betrayal?.bossFights[0].started
+      ).diff(
+        dayjs(info.betrayal?.bossFights[info.betrayal?.bossFights.length - 1]?.finished),
+        'seconds'
+      )} seconds`,
       additionalIcons: info?.betrayal?.bossFights?.map((fight) => {
         return (
-          <Tooltip title={`Defeated ${fight.bossName} in ${dayjs(info.betrayal?.bossFights[0].started).diff(dayjs(info.betrayal?.bossFights[info.betrayal?.bossFights.length - 1]?.finished), 'seconds')} seconds`}>
+          <Tooltip
+            title={`Defeated ${fight.bossName} in ${dayjs(
+              info.betrayal?.bossFights[0].started
+            ).diff(
+              dayjs(info.betrayal?.bossFights[info.betrayal?.bossFights.length - 1]?.finished),
+              'seconds'
+            )} seconds`}
+          >
             <img className="Run-Event__Mini-Icon" src={CatarinaIcon} alt={fight.bossName} />
           </Tooltip>
         );
@@ -88,7 +102,11 @@ const iconMap = {
     return {
       condition: !!info.blight?.events,
       icon: BlightIcon,
-      alt: `Contained a Blight Encounter with at least ${info.blight?.events ? info.blight.events.filter((event) => event.type === 'newLane').length + 1 : 1} lanes`,
+      alt: `Contained a Blight Encounter with at least ${
+        info.blight?.events
+          ? info.blight.events.filter((event) => event.type === 'newLane').length + 1
+          : 1
+      } lanes`,
     };
   },
   blightedMap: (info) => {
@@ -102,13 +120,30 @@ const iconMap = {
     return {
       condition: !!info.beasts?.captured,
       icon: EinharIcon,
-      alt: `Contained ${info?.beasts?.captured?.yellow + info?.beasts?.captured?.red} Beasts Encounter`,
-      additionalIcons: info?.beasts?.captured ? Object.keys(info?.beasts?.captured).sort(() => -1).map((beastType) => {
-        const icon = <img className="Run-Event__Mini-Icon" src={beastType === 'yellow' ? YellowBeastIcon : RedBeastIcon} alt={beastType} />
-        const iconArray = Array(info?.beasts?.captured[beastType]).fill(icon);
-        iconArray.unshift(<span className="Run-Event__Mini-Label">({info?.beasts?.captured[beastType]}x)</span>);
-        return iconArray;
-      }).flat() : null
+      alt: `Contained ${
+        info?.beasts?.captured?.yellow + info?.beasts?.captured?.red
+      } Beasts Encounter`,
+      additionalIcons: info?.beasts?.captured
+        ? Object.keys(info?.beasts?.captured)
+            .sort(() => -1)
+            .map((beastType) => {
+              const icon = (
+                <img
+                  className="Run-Event__Mini-Icon"
+                  src={beastType === 'yellow' ? YellowBeastIcon : RedBeastIcon}
+                  alt={beastType}
+                />
+              );
+              const iconArray = Array(info?.beasts?.captured[beastType]).fill(icon);
+              iconArray.unshift(
+                <span className="Run-Event__Mini-Label">
+                  ({info?.beasts?.captured[beastType]}x)
+                </span>
+              );
+              return iconArray;
+            })
+            .flat()
+        : null,
     };
   },
   conquerors: (info) => {
@@ -119,7 +154,12 @@ const iconMap = {
       additionalIcons: info.conquerors?.bossFights.map((fight) => {
         const Icon = ConquerorsMap[fight.bossName];
         return (
-          <Tooltip title={`Defeated ${fight.bossName} in ${dayjs(fight.finished).diff(dayjs(fight.started), 'seconds')} seconds`}>
+          <Tooltip
+            title={`Defeated ${fight.bossName} in ${dayjs(fight.finished).diff(
+              dayjs(fight.started),
+              'seconds'
+            )} seconds`}
+          >
             <img className="Run-Event__Mini-Icon" src={Icon} alt={fight.bossName} />
           </Tooltip>
         );
@@ -133,12 +173,17 @@ const iconMap = {
       alt: `Crafted ${info?.beasts?.crafted?.length} Beasts Recipe(s)`,
       additionalIcons: info?.beasts?.crafted?.map((crafted) => {
         const icon = (
-          <Tooltip title={`Crafted in ${dayjs(crafted.finished).diff(dayjs(crafted.started), 'seconds')} seconds`}>
+          <Tooltip
+            title={`Crafted in ${dayjs(crafted.finished).diff(
+              dayjs(crafted.started),
+              'seconds'
+            )} seconds`}
+          >
             <img className="Run-Event__Mini-Icon" src={WhiteBeastIcon} alt="Beast Recipe Crafted" />
           </Tooltip>
         );
         return icon;
-      })
+      }),
     };
   },
   delirium: (info) => {
@@ -168,7 +213,7 @@ const iconMap = {
       condition: !!info.harvest?.bossFights,
       icon: OshabiIcon,
       alt: 'Encountered a Harvest Boss',
-    }
+    };
   },
   incursionTemple: (info) => {
     return {
@@ -177,42 +222,59 @@ const iconMap = {
       alt: `Entered an Incursion Temple`,
       additionalIcons: info?.incursion?.rooms?.map((room) => {
         const icon = (
-          <Tooltip title={`Entered ${room.roomName} at ${dayjs(room.timestamp).format('HH:mm:ss')}`}>
-            <img className="Run-Event__Mini-Icon" src={room.roomId ? IncursionRoom : KillsIcon} alt="Incursion Temple" />
+          <Tooltip
+            title={`Entered ${room.roomName} at ${dayjs(room.timestamp).format('HH:mm:ss')}`}
+          >
+            <img
+              className="Run-Event__Mini-Icon"
+              src={room.roomId ? IncursionRoom : KillsIcon}
+              alt="Incursion Temple"
+            />
           </Tooltip>
         );
         return icon;
-      })
+      }),
     };
   },
   incursionUnlocks: (info) => {
     return {
       condition: !!info.incursion?.unlocked,
       icon: AlvaIcon,
-      alt: `Unlocked ${info?.incursion?.unlocked?.length} Incursion Room${info?.incursion?.unlocked?.length > 1 ? 's' : ''}`,
+      alt: `Unlocked ${info?.incursion?.unlocked?.length} Incursion Room${
+        info?.incursion?.unlocked?.length > 1 ? 's' : ''
+      }`,
       additionalIcons: info?.incursion?.unlocked?.map((unlock) => {
         const icon = (
-          <Tooltip title={`Unlocked in ${dayjs(unlock.finished).diff(dayjs(unlock.started), 'seconds')} seconds`}>
+          <Tooltip
+            title={`Unlocked in ${dayjs(unlock.finished).diff(
+              dayjs(unlock.started),
+              'seconds'
+            )} seconds`}
+          >
             <img className="Run-Event__Mini-Icon" src={AlvaIcon} alt="Incursion Room Unlocked" />
           </Tooltip>
         );
         return icon;
-      })
+      }),
     };
   },
   legionBosses: (info) => {
     return {
       condition: !!info.legion?.bossFights,
       icon: LegionIcon,
-      alt: `Killed ${info?.legion?.bossFights?.length} Legion Boss${info?.legion?.bossFights?.length > 1 ? 'es' : ''}`,
+      alt: `Killed ${info?.legion?.bossFights?.length} Legion Boss${
+        info?.legion?.bossFights?.length > 1 ? 'es' : ''
+      }`,
       additionalIcons: info?.legion?.bossFights?.map((fight) => {
         const icon = (
-          <Tooltip title={`Killed ${fight.bossName} at ${dayjs(fight.finished).format('HH:mm:ss')}`}>
+          <Tooltip
+            title={`Killed ${fight.bossName} at ${dayjs(fight.finished).format('HH:mm:ss')}`}
+          >
             <img className="Run-Event__Mini-Icon" src={LegionIcon} alt="Legion Boss Killed" />
           </Tooltip>
         );
         return icon;
-      })
+      }),
     };
   },
   maven: (info) => {
@@ -231,15 +293,15 @@ const iconMap = {
       icon: MetamorphIcon,
       alt: 'Contained a Metamorph Encounter',
       additionalIcons: info.metamorph
-      ? Object.keys(info?.metamorph).map((organ) => {
-        const Icon = require(`../../assets/img/metamorphicons/${organ}.png`);
-        return (
-          <Tooltip title={`${organ} x ${info.metamorph[organ]}`}>
-            <img className="Run-Event__Mini-Icon" src={Icon} alt={organ} />
-          </Tooltip>
-        );
-      })
-      : null,
+        ? Object.keys(info?.metamorph).map((organ) => {
+            const Icon = require(`../../assets/img/metamorphicons/${organ}.png`);
+            return (
+              <Tooltip title={`${organ} x ${info.metamorph[organ]}`}>
+                <img className="Run-Event__Mini-Icon" src={Icon} alt={organ} />
+              </Tooltip>
+            );
+          })
+        : null,
     };
   },
   shaper: (info) => {
@@ -273,16 +335,20 @@ const iconMap = {
       condition: !!info.delirium?.simulacrum,
       icon: SimulacrumIcon,
       alt: `Entered Delirium Simulacrum`,
-      additionalIcons: 
-        info?.delirium?.simulacrum?.waves?.map((wave) => {
-        const actionText = wave.wave === 'end' ? 'Completed Simulacrum' : `Started Wave ${wave.wave}`;
+      additionalIcons: info?.delirium?.simulacrum?.waves?.map((wave) => {
+        const actionText =
+          wave.wave === 'end' ? 'Completed Simulacrum' : `Started Wave ${wave.wave}`;
         const icon = (
           <Tooltip title={`${actionText} at ${dayjs(wave.started).format('HH:mm:ss')}`}>
-            <img className="Run-Event__Mini-Icon" src={DeliriumIcon} alt="Delirium Simulacrum Wave" />
+            <img
+              className="Run-Event__Mini-Icon"
+              src={DeliriumIcon}
+              alt="Delirium Simulacrum Wave"
+            />
           </Tooltip>
         );
         return icon;
-      })
+      }),
     };
   },
   sirus: (info) => {
@@ -298,7 +364,7 @@ const iconMap = {
       icon: SynthesisIcon,
       alt: `Encountered a Synthesis Boss`,
     };
-  }
+  },
 };
 
 const RunEventIcons = ({ info }) => {

@@ -544,7 +544,7 @@ const Migrations = {
         `CREATE INDEX IF NOT EXISTS "item_ignored" ON "item" (
           "ignored",
           "event_id"
-        )`, 
+        )`,
         `CREATE INDEX IF NOT EXISTS "item_value" ON "item" (
           "event_id",
           "ignored",

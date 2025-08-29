@@ -168,7 +168,7 @@ export default class RunStore {
   @computed async generateCSV(): Promise<string> {
     const baseData = this.runs.map((run) => run.asJson);
     const csv = await json2csv(baseData, {});
-    return csv
+    return csv;
   }
 
   reprocessRun(run: Run) {

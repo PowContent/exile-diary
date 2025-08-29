@@ -126,6 +126,6 @@
   animation: spin 1s linear infinite;
   cursor: progress;
   &:hover {
-    color: #888
+    color: #888;
   }
 }

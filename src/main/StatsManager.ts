@@ -35,7 +35,6 @@ const shaperBattlePhases = [
   { name: 'completed', endpoint: true },
 ];
 
-
 const BossStatsConfig = [
   { name: 'Catarina', key: 'betrayal' },
   { name: 'Shaper', key: 'shaper', phases: 3 },
@@ -45,7 +44,7 @@ const BossStatsConfig = [
   { name: 'Oshabi', key: 'harvest' },
   { name: 'Conquerors', key: 'conquerors' },
   // { name: 'Elder', key: 'elder', start: false } // No start there
-]
+];
 
 const getAreaType = (area: string) => {
   const keys = Object.keys(areas).filter((areaType) => areas[areaType].includes(area));
@@ -226,17 +225,17 @@ class StatsManager {
           time: {
             total: 0,
             min: 999999999,
-            max: 0
-          }
+            max: 0,
+          },
         },
         rooms: {
           count: 0,
-          types: {}
-        }
+          types: {},
+        },
       },
       delve: {
         niko: 0,
-        sulphiteNodes: 0
+        sulphiteNodes: 0,
       },
       betrayal: {
         junCounter: 0,
@@ -244,24 +243,24 @@ class StatsManager {
         members: {},
         boss: {
           started: 0,
-          finished: 0
-        }
+          finished: 0,
+        },
       },
       blight: {
         encounters: 0,
         lanes: {
           total: 0,
           min: 9999,
-          max: 0
+          max: 0,
         },
-        maps: 0
+        maps: 0,
       },
       legion: {
         generals: {
           encounters: 0,
-          kills: 0
-        }
-      }
+          kills: 0,
+        },
+      },
     },
     areas: {},
     bosses: {
@@ -598,19 +597,20 @@ class StatsManager {
   }
 
   addBlightStats(run: Run) {
-    if(run.parsedRunInfo?.blight) {
-      for(const event of run.parsedRunInfo.blight.events) {
-        if(event.action === 'start') {
+    if (run.parsedRunInfo?.blight) {
+      for (const event of run.parsedRunInfo.blight.events) {
+        if (event.action === 'start') {
           this.stats.misc.blight.encounters++;
         } else if (event.action === 'newLane') {
           this.stats.misc.blight.lanes.total++;
         }
       }
-      const lanes = run.parsedRunInfo.blight.events.filter(e => e.action === 'newLane').length + 1;
+      const lanes =
+        run.parsedRunInfo.blight.events.filter((e) => e.action === 'newLane').length + 1;
       this.stats.misc.blight.lanes.total += lanes;
       this.stats.misc.blight.lanes.min = Math.min(this.stats.misc.blight.lanes.min, lanes);
       this.stats.misc.blight.lanes.max = Math.max(this.stats.misc.blight.lanes.max, lanes);
-      if(lanes > 8) {
+      if (lanes > 8) {
         this.stats.misc.blight.maps++;
       }
     }
@@ -618,18 +618,21 @@ class StatsManager {
 
   addBetrayalStats(run: Run) {
     if (run.parsedRunInfo?.betrayal) {
-      if(run.parsedRunInfo.betrayal.fights) {
+      if (run.parsedRunInfo.betrayal.fights) {
         this.stats.misc.betrayal.junCounter++;
-        for(const fight of run.parsedRunInfo.betrayal.fights) {
-          this.stats.misc.betrayal.memberEncounters = this.stats.misc.betrayal.memberEncounters ?? 0;
+        for (const fight of run.parsedRunInfo.betrayal.fights) {
+          this.stats.misc.betrayal.memberEncounters =
+            this.stats.misc.betrayal.memberEncounters ?? 0;
           this.stats.misc.betrayal.memberEncounters++;
-          this.stats.misc.betrayal.members[fight.npc] = this.stats.misc.betrayal.members[fight.npc] ?? {
+          this.stats.misc.betrayal.members[fight.npc] = this.stats.misc.betrayal.members[
+            fight.npc
+          ] ?? {
             encounters: 0,
             killedPlayers: 0,
             defeated: 0,
-            defeatedAsLeader: 0
+            defeatedAsLeader: 0,
           };
-          switch(fight.action) {
+          switch (fight.action) {
             case 'killedPlayer':
               this.stats.misc.betrayal.members[fight.npc].killedPlayers++;
               break;
@@ -643,10 +646,10 @@ class StatsManager {
           this.stats.misc.betrayal.members[fight.npc].encounters++;
         }
       }
-      if(run.parsedRunInfo.betrayal.bossfights) {
-        for(const fight of run.parsedRunInfo.betrayal.bossfights) {
+      if (run.parsedRunInfo.betrayal.bossfights) {
+        for (const fight of run.parsedRunInfo.betrayal.bossfights) {
           this.stats.misc.betrayal.boss.started++;
-          if(fight.finished) {
+          if (fight.finished) {
             this.stats.misc.betrayal.boss.finished++;
           }
         }
@@ -656,23 +659,27 @@ class StatsManager {
 
   addIncursionStats(run: Run) {
     if (run.parsedRunInfo?.incursion) {
-      if(run.parsedRunInfo.incursion.unlocked) {
+      if (run.parsedRunInfo.incursion.unlocked) {
         this.stats.misc.incursion.unlocks.count += run.parsedRunInfo.incursion.unlocked.length;
-        for(const unlock of run.parsedRunInfo.incursion.unlocked) {
-          const runningTime = this.getRunningTime(
-            unlock.started,
-            unlock.finished
-          );
+        for (const unlock of run.parsedRunInfo.incursion.unlocked) {
+          const runningTime = this.getRunningTime(unlock.started, unlock.finished);
           this.stats.misc.incursion.unlocks.time.total += runningTime;
-          this.stats.misc.incursion.unlocks.time.max = Math.max(this.stats.misc.incursion.unlocks.time.max, runningTime);
-          this.stats.misc.incursion.unlocks.time.min = Math.min(this.stats.misc.incursion.unlocks.time.min, runningTime);
+          this.stats.misc.incursion.unlocks.time.max = Math.max(
+            this.stats.misc.incursion.unlocks.time.max,
+            runningTime
+          );
+          this.stats.misc.incursion.unlocks.time.min = Math.min(
+            this.stats.misc.incursion.unlocks.time.min,
+            runningTime
+          );
         }
       }
-      if(run.parsedRunInfo.incursion.rooms) {
+      if (run.parsedRunInfo.incursion.rooms) {
         this.stats.misc.incursion.rooms.temples++;
         this.stats.misc.incursion.rooms.count += run.parsedRunInfo.incursion.rooms.length;
-        for(const room of run.parsedRunInfo.incursion.rooms) {
-          this.stats.misc.incursion.rooms.types[room.roomName] = (this.stats.misc.incursion.rooms.types[room.roomName] ?? 0) + 1;
+        for (const room of run.parsedRunInfo.incursion.rooms) {
+          this.stats.misc.incursion.rooms.types[room.roomName] =
+            (this.stats.misc.incursion.rooms.types[room.roomName] ?? 0) + 1;
         }
       }
     }
@@ -680,39 +687,46 @@ class StatsManager {
 
   addBeastsStats(run: Run) {
     if (run.parsedRunInfo?.beasts) {
-      if(run.parsedRunInfo.beasts.captured) {
+      if (run.parsedRunInfo.beasts.captured) {
         this.stats.misc.bestiary.captured.yellow += run.parsedRunInfo.beasts.captured.yellow;
-        this.stats.misc.bestiary.captured.red += run.parsedRunInfo.beasts.captured.red
+        this.stats.misc.bestiary.captured.red += run.parsedRunInfo.beasts.captured.red;
       }
       if (run.parsedRunInfo.beasts.crafted) {
         this.stats.misc.bestiary.crafted.count += run.parsedRunInfo.beasts.crafted.length;
-        for(const craft of run.parsedRunInfo.beasts.crafted) {
-          const runningTime = this.getRunningTime(
-            craft.started,
-            craft.finished
-          );
+        for (const craft of run.parsedRunInfo.beasts.crafted) {
+          const runningTime = this.getRunningTime(craft.started, craft.finished);
           this.stats.misc.bestiary.crafted.time.total += runningTime;
-          this.stats.misc.bestiary.crafted.time.max = Math.max(this.stats.misc.bestiary.crafted.time.max, runningTime);
-          this.stats.misc.bestiary.crafted.time.min = Math.min(this.stats.misc.bestiary.crafted.time.min, runningTime);
+          this.stats.misc.bestiary.crafted.time.max = Math.max(
+            this.stats.misc.bestiary.crafted.time.max,
+            runningTime
+          );
+          this.stats.misc.bestiary.crafted.time.min = Math.min(
+            this.stats.misc.bestiary.crafted.time.min,
+            runningTime
+          );
         }
       }
     }
   }
 
   addDelveStats(run: Run) {
-    if(run.parsedRunInfo?.delve) {
+    if (run.parsedRunInfo?.delve) {
       this.stats.misc.delve.niko += run.parsedRunInfo.delve.niko ? 1 : 0;
       this.stats.misc.delve.sulphiteNodes += run.parsedRunInfo.delve.sulphiteNodes ?? 0;
     }
   }
 
   addLegionStats(run: Run) {
-    if(run.parsedRunInfo?.legion?.bossFights) {
+    if (run.parsedRunInfo?.legion?.bossFights) {
       this.stats.misc.legion.generals.encounters += run.parsedRunInfo.legion.bossFights.length;
-      this.stats.misc.legion.generals.kills += run.parsedRunInfo.legion.bossFights.filter((f: any) => f.finished).length;
+      this.stats.misc.legion.generals.kills += run.parsedRunInfo.legion.bossFights.filter(
+        (f: any) => f.finished
+      ).length;
 
-      for(const fight of run.parsedRunInfo.legion.bossFights) {
-        this.stats.bosses.legion.details[fight.bossName] = this.stats.bosses.legion.details[fight.bossName] ?? {
+      for (const fight of run.parsedRunInfo.legion.bossFights) {
+        this.stats.bosses.legion.details[fight.bossName] = this.stats.bosses.legion.details[
+          fight.bossName
+        ] ?? {
           name: fight.bossName,
           count: 0,
           totalTime: 0,
@@ -728,7 +742,7 @@ class StatsManager {
   addBossStats(run: Run) {
     const detectedBosses: string[] = [];
 
-    for(const config of BossStatsConfig) {
+    for (const config of BossStatsConfig) {
       if (run.parsedRunInfo?.[config.key]?.bossFights) {
         detectedBosses.push(config.name);
       } else {
@@ -745,10 +759,12 @@ class StatsManager {
 
       const stats = this.stats.bosses[config.key];
       stats.count++;
-      if(run.parsedRunInfo[config.key].bossFights[0].started) {
+      if (run.parsedRunInfo[config.key].bossFights[0].started) {
         const battleTime = this.getRunningTime(
           run.parsedRunInfo[config.key].bossFights[0].started,
-          run.parsedRunInfo[config.key].bossFights[run.parsedRunInfo[config.key].bossFights.length - 1].finished
+          run.parsedRunInfo[config.key].bossFights[
+            run.parsedRunInfo[config.key].bossFights.length - 1
+          ].finished
         );
         stats.totalTime += battleTime;
         stats.fastest = Number(Math.min(stats.fastest, battleTime));
@@ -782,7 +798,7 @@ class StatsManager {
     }
 
     if (run.parsedRunInfo?.maven?.witnesses && run.parsedRunInfo?.shaper?.guardians) {
-      for(const bossData of run.parsedRunInfo.shaper.guardians) {
+      for (const bossData of run.parsedRunInfo.shaper.guardians) {
         const boss = bossData.guardianName;
         let statKey = 'shaperGuardians';
         this.stats.bosses[statKey].details[boss] = this.stats.bosses[statKey].details[boss] ?? {
@@ -795,10 +811,10 @@ class StatsManager {
         const stats = this.stats.bosses[statKey].details[boss];
         const totalStats = this.stats.bosses[statKey];
 
-
-        const battleTime =  this.getRunningTime(
+        const battleTime = this.getRunningTime(
           run.parsedRunInfo?.maven.witnesses[0].started || run.first_event,
-          run.parsedRunInfo?.maven.witnesses[run.parsedRunInfo?.maven.witnesses.length - 1].finished || run.last_event
+          run.parsedRunInfo?.maven.witnesses[run.parsedRunInfo?.maven.witnesses.length - 1]
+            .finished || run.last_event
         );
         stats.count++;
         stats.totalTime += battleTime;
@@ -902,23 +918,33 @@ const profitTracker = new ProfitTracker();
 
 const statsManager = {
   getAllStats: async ({ league, characterName }: GetStatsParams) => {
-    const times: {step: string, timestamp: number}[] = [];
-    times.push({step: 'start', timestamp: performance.now()});
+    const times: { step: string; timestamp: number }[] = [];
+    times.push({ step: 'start', timestamp: performance.now() });
     const runs = (await DB.getAllRuns())?.map(formatRun);
-    times.push({step: 'retrieved runs', timestamp: performance.now()});
-    logger.debug(`Successfully retrieved ${runs.length} runs in ${times[1].timestamp - times[0].timestamp} ms`);
+    times.push({ step: 'retrieved runs', timestamp: performance.now() });
+    logger.debug(
+      `Successfully retrieved ${runs.length} runs in ${times[1].timestamp - times[0].timestamp} ms`
+    );
     const items = await DB.getAllItems(league);
-    times.push({step: 'retrieved items', timestamp: performance.now()});
-    logger.debug(`Successfully retrieved ${items.length} items in ${times[2].timestamp - times[1].timestamp} ms`);
+    times.push({ step: 'retrieved items', timestamp: performance.now() });
+    logger.debug(
+      `Successfully retrieved ${items.length} items in ${
+        times[2].timestamp - times[1].timestamp
+      } ms`
+    );
     const divinePrice = await RatesManager.getCurrencyValue(
       league,
       dayjs().format('YYYYMMDD'),
       'Divine Orb'
     );
-    times.push({step: 'retrieved divine price', timestamp: performance.now()});
-    logger.debug(`Successfully retrieved divine price of ${divinePrice} in ${times[3].timestamp - times[2].timestamp} ms`);
+    times.push({ step: 'retrieved divine price', timestamp: performance.now() });
+    logger.debug(
+      `Successfully retrieved divine price of ${divinePrice} in ${
+        times[3].timestamp - times[2].timestamp
+      } ms`
+    );
     const manager = new StatsManager({ runs, items, divinePrice });
-    times.push({step: 'created manager', timestamp: performance.now()});
+    times.push({ step: 'created manager', timestamp: performance.now() });
     logger.debug(`Successfully created manager in ${times[4].timestamp - times[3].timestamp} ms`);
     return manager.stats;
   },

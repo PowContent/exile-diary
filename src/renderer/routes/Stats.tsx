@@ -42,7 +42,7 @@ const itemStore = new ItemStore([]);
 const loader = async () => {
   const stats = await ipcRenderer.invoke('get-all-stats');
   return { stats };
-}
+};
 
 const Stats = () => {
   const screenShotRef = useRef<HTMLDivElement>(null);
@@ -71,13 +71,13 @@ const Stats = () => {
   }, []);
 
   useEffect(() => {
-    if(isFirstRender.current) {
+    if (isFirstRender.current) {
       isFirstRender.current = false;
-    } else if(stats?.items?.loot) {
+    } else if (stats?.items?.loot) {
       itemStore.createItems(
         stats.items.loot.map((item) => ({ ...item, ...JSON.parse(item.raw_data) }))
       );
-      
+
       setIsLoading(false);
     }
   }, [stats]);
@@ -113,13 +113,15 @@ const Stats = () => {
     </div>
   );
 
-  if(isLoading) {
-    return <div className="Stats__Loading">
-      <div className="Stats__Loading-Text">Loading Stats...</div>
-      <div className="Stats__Loading-Progress">
-        <LinearProgress />
-      </div> 
-    </div>;
+  if (isLoading) {
+    return (
+      <div className="Stats__Loading">
+        <div className="Stats__Loading-Text">Loading Stats...</div>
+        <div className="Stats__Loading-Progress">
+          <LinearProgress />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -164,7 +166,6 @@ const Stats = () => {
       </TabPanel>
     </div>
   );
-
 };
 
 export default Stats;

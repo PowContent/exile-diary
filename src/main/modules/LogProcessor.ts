@@ -166,20 +166,18 @@ function getEvent(content: string, server: string) {
     }
   }
 
-  
   const match = textLineRegex.exec(content);
   if (match) {
     const { NPCName, text } = match.groups as { NPCName: string; text: string };
     const event = EventParser.getEventByQuote(NPCName, text);
 
     logger.debug('Found event:', event, ' for NPC:', NPCName, ' and text:', text);
-    if(event) {
+    if (event) {
       return {
         type: event.category,
-        text: JSON.stringify({text: text, ...event})
-      }
+        text: JSON.stringify({ text: text, ...event }),
+      };
     }
-
   }
 }
 
@@ -291,7 +289,7 @@ const LogProcessor = {
 
     if (event) {
       try {
-        if(eventId) { 
+        if (eventId) {
           await DB.updateEvent(eventId, {
             timestamp,
             event_type: event.type,
@@ -345,9 +343,9 @@ const LogProcessor = {
 
   reprocessEvent: async (event: any) => {
     logger.debug('Reprocessing event:', event);
-    if(event.event_text && event.event_text.startsWith('{')) {
+    if (event.event_text && event.event_text.startsWith('{')) {
       const jsonData = JSON.parse(event.event_text);
-      if(!!jsonData.text) {
+      if (!!jsonData.text) {
         const text = jsonData.text;
         const npc = jsonData.npc;
         await LogProcessor.processOther(event.timestamp, `${npc}: ${text}`, event.id);
@@ -371,17 +369,17 @@ const LogProcessor = {
       fullLine = JSON.parse(text).text;
     }
 
-    if(!fullLine) return null;
+    if (!fullLine) return null;
 
     const match = fullLine.match(textLineRegex);
     if (match) {
       return {
         npc: match.groups.npc,
-        text: match.groups.text
+        text: match.groups.text,
       };
     }
     return null;
-  }
+  },
 };
 
 export default LogProcessor;

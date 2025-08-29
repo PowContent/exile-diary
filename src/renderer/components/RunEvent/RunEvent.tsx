@@ -92,53 +92,50 @@ const textPerEventType = {
       <>
         Activated <span className="Text--Rare">{eventData.arguments.name}</span> ({eventData.text})
       </>
-    )
+    );
   },
   Beasts: (event) => {
     const eventData = JSON.parse(event.event_text);
     if (eventData.type === 'Capture') {
       return (
         <>
-          Captured a <span className={eventData.arguments.beastType === 'yellow' ? 'Text--Rare' : 'Text--Error'}>{eventData.arguments.beastType}</span> beast.
+          Captured a{' '}
+          <span
+            className={eventData.arguments.beastType === 'yellow' ? 'Text--Rare' : 'Text--Error'}
+          >
+            {eventData.arguments.beastType}
+          </span>{' '}
+          beast.
         </>
       );
     } else if (eventData.type === 'Craft') {
       if (eventData.arguments.action === 'defeated') {
-        return (
-          <>
-            Completed a beast recipe.
-          </>
-        );
+        return <>Completed a beast recipe.</>;
       } else {
-        return (
-          <>
-            Started a beast recipe.
-          </>
-        );
+        return <>Started a beast recipe.</>;
       }
     }
   },
   Incursion: (event) => {
     const eventData = JSON.parse(event.event_text);
-    if(eventData.type === 'TempleRoom') {
+    if (eventData.type === 'TempleRoom') {
       return (
         <>
-          Entered a <span className="Text--Rare">{eventData.arguments.roomName}</span>{eventData.arguments.roomId ? <> (Room ID: <span className="Text--Magic">{eventData.arguments.roomId}</span>)</> : null}.
+          Entered a <span className="Text--Rare">{eventData.arguments.roomName}</span>
+          {eventData.arguments.roomId ? (
+            <>
+              {' '}
+              (Room ID: <span className="Text--Magic">{eventData.arguments.roomId}</span>)
+            </>
+          ) : null}
+          .
         </>
       );
     } else if (eventData.type === 'Unlock') {
-      if(eventData.arguments.action === 'start') {
-        return (
-          <>
-            Started unlocking an incursion Room.
-          </>
-        );
+      if (eventData.arguments.action === 'start') {
+        return <>Started unlocking an incursion Room.</>;
       } else {
-        return (
-          <>
-            Unlocked an incursion Room.
-          </>
-        );
+        return <>Unlocked an incursion Room.</>;
       }
     }
   },
@@ -152,12 +149,12 @@ const textPerEventType = {
   },
   Conquerors: (event) => {
     const eventData = JSON.parse(event.event_text);
-    if(eventData.arguments.action === 'start') {
+    if (eventData.arguments.action === 'start') {
       return (
         <>
           Started a Conqueror fight against <span className="Text--Rare">{eventData.npc}</span>.
         </>
-      )
+      );
     } else {
       return (
         <>
@@ -172,36 +169,41 @@ const textPerEventType = {
       <>
         Defeated <span className="Text--Rare">{eventData.npc}</span> in a fight against the legion.
       </>
-    )
+    );
   },
   Betrayal: (event) => {
     const eventData = JSON.parse(event.event_text);
-    if(eventData.type ==='Fight') {
+    if (eventData.type === 'Fight') {
       const action = eventData.arguments.action;
-      switch(action) {
+      switch (action) {
         case 'defeatedAsLeader':
           return (
             <>
-              Started a Betrayal fight against <span className="Text--Rare">{eventData.arguments.target}</span>.
+              Started a Betrayal fight against{' '}
+              <span className="Text--Rare">{eventData.arguments.target}</span>.
             </>
           );
         case 'defeated':
           return (
             <>
-              Defeated <span className="Text--Rare">{eventData.arguments.target}</span> in a Betrayal fight.
+              Defeated <span className="Text--Rare">{eventData.arguments.target}</span> in a
+              Betrayal fight.
             </>
           );
         case 'killedPlayer':
           return (
             <>
-              <span className='Text--Rare'>{eventData.arguments.target}</span> killed you in a Betrayal fight.
+              <span className="Text--Rare">{eventData.arguments.target}</span> killed you in a
+              Betrayal fight.
             </>
           );
       }
     } else if (eventData.type === 'BossFight') {
       return (
         <>
-          {eventData.arguments.action === 'start' ? 'Started' : 'Completed'} phase {eventData.arguments.phase} in a fight against <span className="Text--Rare">{eventData.arguments.target}</span>.
+          {eventData.arguments.action === 'start' ? 'Started' : 'Completed'} phase{' '}
+          {eventData.arguments.phase} in a fight against{' '}
+          <span className="Text--Rare">{eventData.arguments.target}</span>.
         </>
       );
     }
@@ -217,38 +219,32 @@ const textPerEventType = {
   Blight: (event) => {
     const eventData = JSON.parse(event.event_text);
     if (eventData.arguments.action === 'start') {
-      return (
-        <>
-          Started a Blight encounter.
-        </>
-      );
+      return <>Started a Blight encounter.</>;
     } else if (eventData.arguments.action === 'newLane') {
-      return (
-        <>
-          Blight encounter spawned a new lane.
-        </>
-      );
+      return <>Blight encounter spawned a new lane.</>;
     }
   },
   Synthesis: (event) => {
     const eventData = JSON.parse(event.event_text);
-    if(eventData.arguments.action === 'start') {
+    if (eventData.arguments.action === 'start') {
       return (
         <>
-          Started a Synthesis fight against <span className="Text--Rare">{eventData.arguments.enemy}</span>.
+          Started a Synthesis fight against{' '}
+          <span className="Text--Rare">{eventData.arguments.enemy}</span>.
         </>
       );
     } else {
       return (
         <>
-          Defeated <span className="Text--Rare">{eventData.arguments.enemy}</span> in a Synthesis fight.
+          Defeated <span className="Text--Rare">{eventData.arguments.enemy}</span> in a Synthesis
+          fight.
         </>
       );
     }
   },
   Harvest: (event) => {
     const eventData = JSON.parse(event.event_text);
-    if(eventData.arguments.action === 'start') {
+    if (eventData.arguments.action === 'start') {
       return (
         <>
           Started a Harvest fight against <span className="Text--Rare">{eventData.npc}</span>.
@@ -269,21 +265,14 @@ const textPerEventType = {
       case 'started':
         return (
           <>
-            Started a fight against <span className="Text--Rare">{eventData.arguments.enemy}</span> (Phase: {eventData.arguments.phase}).
+            Started a fight against <span className="Text--Rare">{eventData.arguments.enemy}</span>{' '}
+            (Phase: {eventData.arguments.phase}).
           </>
         );
       case 'phaseStarted':
-        return (
-          <>
-            Started phase {eventData.arguments.phase}.
-          </>
-        );
+        return <>Started phase {eventData.arguments.phase}.</>;
       case 'phaseEnded':
-        return (
-          <>
-            Ended phase {eventData.arguments.phase}.
-          </>
-        );
+        return <>Ended phase {eventData.arguments.phase}.</>;
       case 'defeated':
         return (
           <>
@@ -298,7 +287,8 @@ const textPerEventType = {
       case 'started':
         return (
           <>
-            Started phase {eventData.arguments.phase} against <span className="Text--Rare">{eventData.arguments.enemy}</span>.
+            Started phase {eventData.arguments.phase} against{' '}
+            <span className="Text--Rare">{eventData.arguments.enemy}</span>.
           </>
         );
       case 'defeated':
@@ -314,7 +304,8 @@ const textPerEventType = {
     if (eventData.arguments.action === 'start') {
       return (
         <>
-          Started a Boss Fight against <span className="Text--Rare">{eventData.arguments.target}</span>.
+          Started a Boss Fight against{' '}
+          <span className="Text--Rare">{eventData.arguments.target}</span>.
         </>
       );
     } else {
@@ -327,20 +318,12 @@ const textPerEventType = {
   },
   Maven: (event) => {
     const eventData = JSON.parse(event.event_text);
-    if(eventData.arguments.action === 'start') {
-      return (
-        <>
-          Started a Maven fight against a map Boss.
-        </>
-      );
+    if (eventData.arguments.action === 'start') {
+      return <>Started a Maven fight against a map Boss.</>;
     } else {
-      return (
-        <>
-          Maven witnessed the map Boss dying.
-        </>
-      );
+      return <>Maven witnessed the map Boss dying.</>;
     }
-  }
+  },
 };
 
 const generateNode = (event, runInfo, previousEvent): ReactNode => {

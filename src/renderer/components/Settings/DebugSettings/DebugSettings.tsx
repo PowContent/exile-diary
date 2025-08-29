@@ -138,14 +138,19 @@ const DebugSettings = ({ runStore }) => {
         <div>
           Reprocess all runs in the database. This will re-run the run parser and update all runs.
         </div>
-        <div className="Text--Error">Warning: This may take a while and the app may be unresponsive while it's processing.</div>
+        <div className="Text--Error">
+          Warning: This may take a while and the app may be unresponsive while it's processing.
+        </div>
       </div>
       <Stack direction="row" gap={5} justifyContent="center">
         <ButtonGroup variant="outlined">
-          <Button 
-            onClick={handleReprocessRuns} 
+          <Button
+            onClick={handleReprocessRuns}
             disabled={isReprocessing}
-            endIcon={isReprocessing ? <CircularProgress size="0.8rem" /> : null}>Reprocess Runs</Button>
+            endIcon={isReprocessing ? <CircularProgress size="0.8rem" /> : null}
+          >
+            Reprocess Runs
+          </Button>
         </ButtonGroup>
       </Stack>
     </div>

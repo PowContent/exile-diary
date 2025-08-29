@@ -174,8 +174,13 @@ const RunParser = {
     return mapStats;
   },
 
-  getMapRun: async (runId: number): Promise<{ first_event: string; last_event: string; completed: boolean }> => {
-    const mapRun = await OldDB.get('SELECT first_event, last_event, completed FROM run WHERE id = ?', [runId]);
+  getMapRun: async (
+    runId: number
+  ): Promise<{ first_event: string; last_event: string; completed: boolean }> => {
+    const mapRun = await OldDB.get(
+      'SELECT first_event, last_event, completed FROM run WHERE id = ?',
+      [runId]
+    );
     return mapRun;
   },
 
@@ -390,7 +395,9 @@ const RunParser = {
         (await RunParser.getLastInventoryTimestamp()) ?? dayjs.unix(0).toISOString();
       if (
         dayjs().isSameOrAfter(dayjs(lasteventTimestamp)) ||
-        dayjs(lastInventoryTimestamp).isSameOrAfter(dayjs(lasteventTimestamp).subtract(5, 'seconds')) // Last inventory is newer than the last event + cache
+        dayjs(lastInventoryTimestamp).isSameOrAfter(
+          dayjs(lasteventTimestamp).subtract(5, 'seconds')
+        ) // Last inventory is newer than the last event + cache
       ) {
         break;
       } else {
@@ -579,22 +586,23 @@ const RunParser = {
           continue;
         case 'slain':
           run.deaths = ++run.deaths || 1;
-          if(
-            run.shaper?.guardians?.length >= 1 && 
+          if (
+            run.shaper?.guardians?.length >= 1 &&
             run.maven?.witnesses?.[run.maven?.witnesses?.length - 1].started
           ) {
-            run.shaper.guardians[run.shaper.guardians.length - 1].deaths = ++run.shaper.guardians[run.shaper.guardians.length - 1].deaths || 1;
+            run.shaper.guardians[run.shaper.guardians.length - 1].deaths =
+              ++run.shaper.guardians[run.shaper.guardians.length - 1].deaths || 1;
           }
           continue;
         case 'abnormalDisconnect':
           run.abnormalDisconnect = ++run.abnormalDisconnect || 1;
           continue;
-        // case 'shrine':
-        //   if (Constants.darkshrineQuotes[evt.event_text]) {
-        //     run.labyrinth = run.labyrinth || {};
-        //     run.labyrinth.darkshrines = run.labyrinth.darkshrines || [];
-        //     run.labyrinth.darkshrines.push(evt.event_text);
-        //   }
+          // case 'shrine':
+          //   if (Constants.darkshrineQuotes[evt.event_text]) {
+          //     run.labyrinth = run.labyrinth || {};
+          //     run.labyrinth.darkshrines = run.labyrinth.darkshrines || [];
+          //     run.labyrinth.darkshrines.push(evt.event_text);
+          //   }
           //  else {
           //   run.shrines = run.shrines || [];
           //   run.shrines.push(Constants.shrineQuotes[evt.event_text]);
@@ -607,7 +615,7 @@ const RunParser = {
         //   break;
         default:
           const parsedEvent = EventParser.parseEventData(run, evt);
-          if(parsedEvent) continue;
+          if (parsedEvent) continue;
       }
 
       line = LogProcessor.readLine(evt.event_text);
@@ -820,7 +828,7 @@ const RunParser = {
     let firstEvent: string | null = null;
 
     // Read latest Run ID
-    if(runId) {
+    if (runId) {
       const RunData = await DB.getRunData(runId);
       if (RunData) {
         lastEventTimestamp = RunData.last_event;
@@ -890,15 +898,15 @@ const RunParser = {
       true, // completed
     ];
 
-    await RunParser.updateMapRun(runId, runArguments)
+    await RunParser.updateMapRun(runId, runArguments);
     return {
-        name: areaInfo.name,
-        gained: items.value,
-        xp: xpDiff,
-        kills: killCount > -1 ? killCount : null,
-        firstEvent,
-        lastEvent: lastEventTimestamp,
-      };
+      name: areaInfo.name,
+      gained: items.value,
+      xp: xpDiff,
+      kills: killCount > -1 ? killCount : null,
+      firstEvent,
+      lastEvent: lastEventTimestamp,
+    };
   },
 
   reprocessRuns: async () => {
@@ -908,7 +916,7 @@ const RunParser = {
     }
   },
 
-  reprocessRun: async(runId: number) => {
+  reprocessRun: async (runId: number) => {
     // Reprocess the run
     await LogProcessor.reprocessEvents(runId);
     return RunParser.processRun('', runId);

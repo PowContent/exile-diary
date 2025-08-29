@@ -733,7 +733,7 @@ const Runs = {
       logger.error(`Error getting logs for run ID ${runId}: ${JSON.stringify(err)}`);
       return [];
     }
-  }
+  },
 };
 
 export default Runs;

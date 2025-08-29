@@ -1,11 +1,11 @@
 type BossFights = {
-      bossName?: string;
-      action: string;
-      started?: string;
-      finished?: string;
-      enemy?: string;
-      phase?: number;
-    }[];
+  bossName?: string;
+  action: string;
+  started?: string;
+  finished?: string;
+  enemy?: string;
+  phase?: number;
+}[];
 
 type RunInfo = {
   blightedMap?: string;
@@ -13,15 +13,15 @@ type RunInfo = {
     captured: {
       yellow: number;
       red: number;
-    },
+    };
     crafted: {
       started: string;
       finished: string;
     }[];
   };
   incursion?: {
-    unlocked: { started: string, finished: string }[];
-    rooms: { roomName: string, roomId: boolean, timestamp: string }[];
+    unlocked: { started: string; finished: string }[];
+    rooms: { roomName: string; roomId: boolean; timestamp: string }[];
   };
   maven?: {
     crucibleCompleted?: number;
@@ -44,7 +44,7 @@ type RunInfo = {
       guardianName: string;
       started: string;
       deaths: number;
-    }[]
+    }[];
   };
   envoy?: {
     words: number;
@@ -108,15 +108,15 @@ type RunInfo = {
   };
   elderGuardian?: string;
   delve: {
-    niko: boolean,
-    sulphiteNodes: number
+    niko: boolean;
+    sulphiteNodes: number;
   };
   blight: {
     events: {
       action: string;
       timestamp: string;
     }[];
-  }
+  };
 };
 
 type Run = {

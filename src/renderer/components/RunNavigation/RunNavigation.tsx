@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Select, MenuItem, SelectChangeEvent, Link } from '@mui/material';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import Tooltip from '@mui/material/Tooltip';
 import { observer } from 'mobx-react-lite';
 
 const RunNavigation = ({ run, store }) => {
@@ -41,11 +43,14 @@ const RunNavigation = ({ run, store }) => {
         {store.getSortedRuns().map((run) => {
           return (
             <MenuItem value={run.runId}>
-              {run.firstEvent.format('L HH:mm:ss')} ({run.name})
+              {run.runId} - {run.firstEvent.format('L HH:mm:ss')} ({run.name})
             </MenuItem>
           );
         })}
       </Select>
+      <Tooltip title="Reprocess this Run">
+        <RefreshIcon className="Run__Navigation__RefreshIcon" onClick={() => store.reprocessRun(run)} />
+      </Tooltip>
       <Link
         component={RouterLink}
         to={nextRun ? `/run/${nextRun.runId}` : '#'}

@@ -7,7 +7,7 @@ import SettingsManager from '../SettingsManager';
 import SkillTreeWatcher from './SkillTreeWatcher';
 import InventoryGetter from './InventoryGetter';
 import ItemParser from './ItemParser';
-import Constants from '../../helpers/constants';
+import EventParser from './EventParser';
 import Utils from './Utils';
 
 const logger = Logger.scope('LogProcessor');
@@ -63,6 +63,7 @@ class LogProcessorScheduler {
 const scheduler = new LogProcessorScheduler();
 const emitter = new EventEmitter();
 
+const textLineRegex = /^(?<npc>.*?): (?<text>.*)$/;
 const generationRegex = /.*level\s(?<level>\d+)\sarea\s"(?<areaId>\S+)".*seed\s(?<seed>\d+)/;
 const allocationRegex =
   /Successfully (?<verb>(allocated|unallocated)).*id:\s(?<id>.*),.*name:\s(?<name>.*)$/;
@@ -76,39 +77,6 @@ const instanceServerRegex =
 function getEvent(content: string, server: string) {
   const settings = SettingsManager.getAll();
   // logger.debug(`Getting event for content: ${content}`);
-
-  const masterString = parseMaster(content);
-  if (masterString) {
-    return {
-      type: 'master',
-      text: masterString,
-      instanceServer: '',
-    };
-  }
-
-  const conquerorString = parseConqueror(content);
-  if (conquerorString) {
-    return {
-      type: 'conqueror',
-      text: conquerorString,
-    };
-  }
-
-  const npcString = parseNPC(content);
-  if (npcString) {
-    return {
-      type: 'leagueNPC',
-      text: npcString,
-    };
-  }
-
-  const mapBossString = parseMapBoss(content);
-  if (mapBossString) {
-    return {
-      type: 'mapBoss',
-      text: mapBossString,
-    };
-  }
 
   if (content.startsWith('Abnormal disconnect')) {
     return {
@@ -162,17 +130,6 @@ function getEvent(content: string, server: string) {
         type: 'level',
         text: Number.parseInt((match.groups as { level: string }).level),
       };
-    } else {
-      const cleanContent = content.substring(2).trim();
-      if (
-        Constants.shrineQuotes[cleanContent] ||
-        Constants.darkshrineQuotes.includes(cleanContent)
-      ) {
-        return {
-          type: 'shrine',
-          text: cleanContent,
-        };
-      }
     }
   } else if (content.startsWith('@') && (content.includes('@From') || content.includes('@To'))) {
     const characterName = settings.activeProfile.characterName;
@@ -208,59 +165,22 @@ function getEvent(content: string, server: string) {
       };
     }
   }
-}
 
-// Parse Spectific NPC lines from the content
-function parseMaster(content) {
-  const mastersRegex = new RegExp(`(?<text>(${Constants.masters.join('|')}):.*)$`, 'i');
-
-  const match = mastersRegex.exec(content);
+  
+  const match = textLineRegex.exec(content);
   if (match) {
-    return (match.groups as { text: string }).text.trim();
+    const { NPCName, text } = match.groups as { NPCName: string; text: string };
+    const event = EventParser.getEventByQuote(NPCName, text);
+
+    logger.debug('Found event:', event, ' for NPC:', NPCName, ' and text:', text);
+    if(event) {
+      return {
+        type: event.category,
+        text: JSON.stringify({text: text, ...event})
+      }
+    }
+
   }
-
-  // 3.8.0: Jun sometimes does not talk at all during missions; scan for Syndicate member lines instead
-  const junRegex = new RegExp(
-    `(?<master>${Constants.syndicateMembers.join('|')}): (?<text>.*)$`,
-    'i'
-  );
-
-  const junMatch = junRegex.exec(content);
-  if (junMatch) {
-    return `Jun, Veiled Master: ${(junMatch.groups as { text: string }).text.trim()}`;
-  }
-
-  // If no master or syndicate member is found, return null
-  return null;
-}
-
-function parseConqueror(content) {
-  const conquerorRegex = new RegExp(`(?<text>(${Constants.conquerors.join('|')}): .*)$`, 'i');
-  const match = conquerorRegex.exec(content);
-  if (match) {
-    return (match.groups as { text: string }).text.trim();
-  }
-  return null;
-}
-
-function parseNPC(content) {
-  const npcRegex = new RegExp(`^(?<text>(${Constants.leagueNPCs.join('|')}): .*)$`, 'i');
-  const match = npcRegex.exec(content);
-  if (match) {
-    // If a NPC is found, return the full string
-    return (match.groups as { text: string }).text.trim();
-  }
-  return null;
-}
-
-function parseMapBoss(content) {
-  const mapBossesRegex = new RegExp(`^(?<text>(${Constants.mapBosses.join('|')}): .*)$`, 'i');
-  const match = mapBossesRegex.exec(content);
-  if (match) {
-    // If a map boss is found, return the full string
-    return (match.groups as { text: string }).text.trim();
-  }
-  return null;
 }
 
 let parsedInstanceServerTwice = false;
@@ -365,19 +285,27 @@ const LogProcessor = {
     }
   },
 
-  processOther: async (timestamp: string, line: string) => {
+  processOther: async (timestamp: string, line: string, eventId: number | null = null) => {
     // logger.debug('LogProcessor.processOther', timestamp, line);
     const event = getEvent(line, lastInstanceServer);
 
     if (event) {
       try {
-        // Save the event to the database
-        await DB.insertEvent({
-          timestamp,
-          event_type: event.type,
-          event_text: event.text,
-          server: lastInstanceServer,
-        });
+        if(eventId) { 
+          await DB.updateEvent(eventId, {
+            timestamp,
+            event_type: event.type,
+            event_text: event.text,
+          });
+        } else {
+          // Save the event to the database
+          await DB.insertEvent({
+            timestamp,
+            event_type: event.type,
+            event_text: event.text,
+            server: lastInstanceServer,
+          });
+        }
 
         // If we just entered a new map area, try to process the previous area
         if (event.type === 'entered') {
@@ -406,6 +334,54 @@ const LogProcessor = {
       }
     }
   },
+
+  reprocessEvents: async (runId: number) => {
+    logger.info(`Reprocessing events for run ID: ${runId}`);
+    const events = await DB.getEventsForRun(runId);
+    for (const event of events) {
+      await LogProcessor.reprocessEvent(event);
+    }
+  },
+
+  reprocessEvent: async (event: any) => {
+    logger.debug('Reprocessing event:', event);
+    if(event.event_text && event.event_text.startsWith('{')) {
+      const jsonData = JSON.parse(event.event_text);
+      if(!!jsonData.text) {
+        const text = jsonData.text;
+        const npc = jsonData.npc;
+        await LogProcessor.processOther(event.timestamp, `${npc}: ${text}`, event.id);
+      }
+    } else {
+      const text = event.event_text;
+      const match = textLineRegex.exec(text);
+      if (match) {
+        logger.debug('Matched event text:', match.groups);
+        // If a match is found, process the event
+        await LogProcessor.processOther(event.timestamp, text, event.id);
+      }
+    }
+  },
+
+  readLine: (text: any): any | null => {
+    let fullLine = text;
+    if (typeof text !== 'string') {
+      fullLine = text.text;
+    } else if (text.startsWith('{')) {
+      fullLine = JSON.parse(text).text;
+    }
+
+    if(!fullLine) return null;
+
+    const match = fullLine.match(textLineRegex);
+    if (match) {
+      return {
+        npc: match.groups.npc,
+        text: match.groups.text
+      };
+    }
+    return null;
+  }
 };
 
 export default LogProcessor;

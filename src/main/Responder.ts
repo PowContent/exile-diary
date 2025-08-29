@@ -49,6 +49,19 @@ const loadRunDetails = async (e, { runId }) => {
   return run;
 };
 
+const reprocessRuns = async (e) => {
+  logger.info('Reprocessing all runs');
+  await RunParser.reprocessRuns();
+  RendererLogger.log({ messages: [{ text: 'All runs have been reprocessed.' }] });
+};
+
+const reprocessRun = async (e, { runId }) => {
+  logger.info(`Reprocessing run with id: ${runId}`);
+  await RunParser.reprocessRun(runId);
+  const run = await Runs.getRun(runId);
+  return run;
+};
+
 const getSettings = async (e, params = []) => {
   logger.info('Loading settings for the renderer process');
   if (params.length === 0) return SettingsManager.settings;
@@ -212,6 +225,8 @@ const Responder = {
   'load-runs': loadRuns,
   'load-run': loadRun,
   'load-run-details': loadRunDetails,
+  'debug:reprocess-runs': reprocessRuns,
+  'reprocess-run': reprocessRun,
   'get-settings': getSettings,
   'get-characters': getCharacters,
   'save-settings': saveSettings,

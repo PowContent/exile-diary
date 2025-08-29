@@ -12,11 +12,12 @@ export default class RunStore {
   size = Number.MAX_SAFE_INTEGER;
   maxSize = Number.MAX_SAFE_INTEGER; // This can be changed in the future
   currentRun: Run;
-  csv: string = '';
+  processing: Boolean;
 
   constructor(shouldSetupFromBackend = true) {
     makeAutoObservable(this);
     this.currentRun = new Run(this, { name: 'Unknown' });
+    this.processing = false;
     if (shouldSetupFromBackend) {
       this.setupFromBackend();
     }
@@ -26,7 +27,6 @@ export default class RunStore {
     this.isLoading = true;
     runInAction(async () => {
       this.runs = runs.map((run) => new Run(this, run));
-      await this.generateCsv();
       this.isLoading = false;
     });
   }
@@ -165,10 +165,27 @@ export default class RunStore {
     };
   }
 
-  @computed async generateCsv(): Promise<void> {
+  @computed async generateCSV(): Promise<string> {
     const baseData = this.runs.map((run) => run.asJson);
     const csv = await json2csv(baseData, {});
+    return csv
+  }
 
-    this.csv = csv;
+  reprocessRun(run: Run) {
+    logger.info(run);
+    logger.info(`Reprocessing run with ID: ${run.runId}`);
+    return electronService.ipcRenderer
+      .invoke('reprocess-run', { runId: run.runId })
+      .then((details) => {
+        return run.updateDetails(details);
+      });
+  }
+
+  async reprocessRuns() {
+    logger.info('Reprocessing all runs');
+    this.processing = true;
+    await electronService.ipcRenderer.invoke('reprocess-runs');
+    await this.loadRuns(this.size);
+    this.processing = false;
   }
 }

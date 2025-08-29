@@ -6,6 +6,7 @@ import * as uniqueIcons from './data/uniqueIcons.json';
 import * as uniques from './data/uniques.json';
 import * as items from './data/items.json';
 import * as worldAreas from './data/worldAreas.json';
+import * as events from './data/events.json';
 import areas from './data/areas.json';
 
 type ConstantContainer = {
@@ -18,6 +19,11 @@ type ConstantContainer = {
   };
   uniques: {
     byIconPath: {
+      [key: string]: any;
+    };
+  };
+  events: {
+    byQuote: {
       [key: string]: any;
     };
   };
@@ -34,6 +40,7 @@ const Constants: ConstantContainer = {
   areas,
   worldAreas,
   items,
+  events,
 };
 
 export default Constants;

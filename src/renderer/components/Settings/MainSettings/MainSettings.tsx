@@ -71,7 +71,6 @@ const MainSettings = ({ settings, store, runStore }) => {
     e.preventDefault();
     
     try {
-      // Use Electron's native file dialog
       const result = await ipcRenderer.invoke('open-file-dialog', {
         title: 'Select Path of Exile Client.txt file',
         filters: [
@@ -94,9 +93,19 @@ const MainSettings = ({ settings, store, runStore }) => {
   // Screenshot Folder Location
   const [screenshotLocation, setScreenshotLocation] = React.useState(settings.screenshotDir);
   const screenshotLocationRef = useRef(screenshotLocation);
-  const handleOpenScreenshotLocation = (e) => {
+  const handleOpenScreenshotLocation = async (e) => {
     e.preventDefault();
-    setScreenshotLocation(path.join(e.target.files[0].path));
+    try {
+      const result = await ipcRenderer.invoke('open-file-dialog', {
+        title: 'Select Screenshot Folder',
+        properties: ['openDirectory']
+      });
+      if (result && !result.canceled && result.filePaths.length > 0) {
+        setScreenshotLocation(result.filePaths[0]);
+      }
+    } catch (error) {
+      console.error('Error opening directory dialog:', error);
+    }
   };
 
   // League Override
@@ -262,16 +271,9 @@ const MainSettings = ({ settings, store, runStore }) => {
             component="label"
             variant="contained"
             sx={{ marginTop: '7px', marginBottom: '10px', padding: '2px 15px' }}
+            onClick={handleOpenScreenshotLocation}
           >
             Find PoE Screenshot Folder
-            <input
-              hidden
-              webkitdirectory=""
-              directory=""
-              type="file"
-              ref={screenshotLocationRef}
-              onInput={handleOpenScreenshotLocation}
-            />
           </Button>
         </div>
         <div className="Settings__Row">

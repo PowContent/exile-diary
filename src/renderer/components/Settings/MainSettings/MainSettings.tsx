@@ -67,10 +67,28 @@ const MainSettings = ({ settings, store, runStore }) => {
   // Client File Location
   const [clientFileLocation, setClientFileLocation] = React.useState(settings.clientTxt);
   const clientFileLocationRef = useRef(clientFileLocation);
-  const handleOpenClientLocation = (e) => {
+  const handleOpenClientLocation = async (e) => {
     e.preventDefault();
-    const { path: filePath, name } = e.target.files[0];
-    setClientFileLocation(filePath.endsWith(name) ? filePath : path.join(filePath, name));
+    
+    try {
+      // Use Electron's native file dialog
+      const result = await ipcRenderer.invoke('open-file-dialog', {
+        title: 'Select Path of Exile Client.txt file',
+        filters: [
+          { name: 'Text Files', extensions: ['txt'] },
+          { name: 'All Files', extensions: ['*'] }
+        ],
+        properties: ['openFile']
+      });
+      
+      if (result && !result.canceled && result.filePaths.length > 0) {
+        const filePath = result.filePaths[0];
+        console.log('Selected file path:', filePath);
+        setClientFileLocation(filePath);
+      }
+    } catch (error) {
+      console.error('Error opening file dialog:', error);
+    }
   };
 
   // Screenshot Folder Location
@@ -223,18 +241,11 @@ const MainSettings = ({ settings, store, runStore }) => {
             onChange={(e) => setClientFileLocation(e.target.value)}
           />
           <Button
-            component="label"
             variant="contained"
             sx={{ marginTop: '7px', marginBottom: '10px', padding: '2px 15px' }}
+            onClick={handleOpenClientLocation}
           >
             Find Path of Exile Log folder
-            <input
-              hidden
-              accept=".txt, text/plain"
-              type="file"
-              ref={clientFileLocationRef}
-              onInput={handleOpenClientLocation}
-            />
           </Button>
         </div>
         <div className="Settings__Row">

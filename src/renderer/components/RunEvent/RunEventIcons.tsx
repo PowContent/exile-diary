@@ -74,7 +74,7 @@ const iconMap = {
   },
   betrayalBoss: (info) => {
     return {
-      condition: !!info.betrayal?.bossFights,
+      condition: !!info.betrayal?.bossFights && info.betrayal.bossFights.length > 0,
       icon: CatarinaIcon,
       alt: `Contained a Betrayal Boss Fight.\nFight lasted ${dayjs(
         info.betrayal?.bossFights[0].started

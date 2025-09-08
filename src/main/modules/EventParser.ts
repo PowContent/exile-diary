@@ -234,12 +234,13 @@ const rules = {
   Synthesis: {
     BossFight: (run, event) => {
       const eventData = JSON.parse(event.event_text);
+      if (eventData.arguments.action === 'unknown') {
+        return null;
+      }
       run.synthesis = run.synthesis || {};
       run.synthesis.bossFights = run.synthesis.bossFights || [];
       run.synthesis.boss = eventData.npc;
-      if (eventData.arguments.action === 'unknown') {
-        return null;
-      } else if (eventData.arguments.action === 'start') {
+      if (eventData.arguments.action === 'start') {
         run.synthesis.bossFights.push({
           enemy: eventData.arguments.enemy,
           started: event.timestamp,

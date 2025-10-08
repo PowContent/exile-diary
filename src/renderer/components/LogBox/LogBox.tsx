@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
 import './LogBox.css';
 import { Link } from 'react-router-dom';
@@ -66,6 +66,121 @@ const LogBox = ({ store }) => {
         ))
       : '';
   const [isOpen, toggleOpenState] = useState(false);
+  const [scrollPercentage, setScrollPercentage] = useState(0);
+  const [thumbHeight, setThumbHeight] = useState(20);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartY, setDragStartY] = useState(0);
+  const [dragStartScrollTop, setDragStartScrollTop] = useState(0);
+  const linesContainerRef = useRef<HTMLDivElement>(null);
+  const scrollbarAreaRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new messages arrive and the log is open
+  useEffect(() => {
+    if (isOpen && linesContainerRef.current) {
+      linesContainerRef.current.scrollTop = linesContainerRef.current.scrollHeight;
+    }
+  }, [store.logs.length, isOpen]);
+
+  // Update scrollbar position
+  const updateScrollbar = () => {
+    if (linesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = linesContainerRef.current;
+      const maxScroll = scrollHeight - clientHeight;
+
+      if (maxScroll > 0) {
+        const percentage = scrollTop / maxScroll;
+        setScrollPercentage(percentage);
+
+        // Calculate thumb height based on viewport ratio
+        const thumbHeightPercent = Math.max((clientHeight / scrollHeight) * 100, 10);
+        setThumbHeight(thumbHeightPercent);
+      }
+    }
+  };
+
+  // Prevent scroll from bubbling to parent
+  const handleWheel = (e: React.WheelEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (linesContainerRef.current) {
+      // Manually handle scrolling
+      linesContainerRef.current.scrollTop += e.deltaY;
+      updateScrollbar();
+    }
+  };
+
+  // Handle scrollbar dragging
+  const handleScrollbarMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (linesContainerRef.current) {
+      setIsDragging(true);
+      setDragStartY(e.clientY);
+      setDragStartScrollTop(linesContainerRef.current.scrollTop);
+    }
+  };
+
+  const handleScrollbarMove = (clientY: number) => {
+    if (scrollbarAreaRef.current && linesContainerRef.current) {
+      const scrollbarRect = scrollbarAreaRef.current.getBoundingClientRect();
+      const { scrollHeight, clientHeight } = linesContainerRef.current;
+
+      // Calculate how far the mouse has moved
+      const deltaY = clientY - dragStartY;
+
+      // Calculate the ratio between scrollbar movement and content scroll
+      const scrollbarHeight = scrollbarRect.height;
+      const thumbHeightInPixels = scrollbarHeight * thumbHeight / 100;
+      const availableTrackHeight = scrollbarHeight - thumbHeightInPixels;
+      const maxScroll = scrollHeight - clientHeight;
+
+      // Convert pixel movement to scroll amount
+      const scrollDelta = (deltaY / availableTrackHeight) * maxScroll;
+
+      // Update scroll position
+      linesContainerRef.current.scrollTop = Math.max(0, Math.min(maxScroll, dragStartScrollTop + scrollDelta));
+    }
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      handleScrollbarMove(e.clientY);
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, thumbHeight, dragStartY, dragStartScrollTop]);
+
+  // Watch for scroll and resize events
+  useEffect(() => {
+    const container = linesContainerRef.current;
+    if (container && isOpen) {
+      const handleScroll = () => updateScrollbar();
+      container.addEventListener('scroll', handleScroll);
+
+      const resizeObserver = new ResizeObserver(() => updateScrollbar());
+      resizeObserver.observe(container);
+
+      updateScrollbar(); // Initial update
+
+      return () => {
+        container.removeEventListener('scroll', handleScroll);
+        resizeObserver.disconnect();
+      };
+    }
+  }, [isOpen, messages.length]);
+
   const classes = classNames({
     'Log-Box': true,
     'Log-Box--Open': isOpen,
@@ -86,8 +201,24 @@ const LogBox = ({ store }) => {
 
   return (
     <div className={classes}>
-      {icon}
-      <div className="Log-Box__Lines">
+      {isOpen && <div className="Log-Box__Sidebar">
+        {icon}
+        <div
+          className="Log-Box__Scrollbar-Area"
+          ref={scrollbarAreaRef}
+          onMouseDown={handleScrollbarMouseDown}
+        >
+          <div
+            className="Log-Box__Scrollbar-Thumb"
+            style={{
+              height: `${thumbHeight}%`,
+              top: `${scrollPercentage * (100 - thumbHeight)}%`,
+            }}
+          ></div>
+        </div>
+      </div>}
+      {!isOpen && icon}
+      <div className="Log-Box__Lines" ref={linesContainerRef} onWheel={handleWheel}>
         <div className="Log-Box__Old_Lines">{messages.length > 1 ? messages.slice(0, -1) : ''}</div>
         <div className="Log-Box__Last_Line">{messages.slice(-1)}</div>
       </div>

@@ -12,11 +12,11 @@ type Message = {
   divinePrice?: number;
 };
 
-const maxHistory = 100;
+const maxHistory = 1000;
 const messagesHistory: { timestamp: Dayjs; messages: Message[] }[] = [];
 
 function addToHistory(messages: Message[]) {
-  if (messagesHistory.length > maxHistory - 1) {
+  if (messagesHistory.length >= maxHistory) {
     messagesHistory.shift();
   }
   messagesHistory.push({ timestamp: dayjs(), messages });

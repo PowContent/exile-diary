@@ -1103,7 +1103,7 @@ const RunParser = {
     ParseShortcut = SettingsManager.get('runParseShortcut') || 'CommandOrControl+F10';
     logger.info(`Registering run parse shortcut: ${ParseShortcut}`);
     globalShortcut.register(ParseShortcut, () => {
-      logger.debug('Run parse shortcut triggered');
+      logger.info('Run parse shortcut pressed');
       const event = { timestamp: dayjs().toISOString() };
       logger.debug('Calling tryProcess with event:', event);
       RunParser.tryProcess({ event });

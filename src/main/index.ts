@@ -54,10 +54,68 @@ enum SYSTEMS {
 const autoUpdaterIntervalTime = 1000 * 60 * 60; // 1 hour
 const isDev = require('electron-is-dev') || SettingsManager.get('forceDebugMode');
 let modReadingTimer: Dayjs | null = null;
+let originalDebugLogger: ((...params: any[]) => void) | null = null;
+let originalInfoLogger: ((...params: any[]) => void) | null = null;
+let isLoggingToRenderer = false;
 
 function setLogTransport(debugMode) {
-  logger.transports.console.level = debugMode ? 'debug' : 'info';
-  logger.transports.file.level = debugMode ? 'debug' : 'info';
+  logger.transports.console.level = debugMode ? 'verbose' : 'info';
+  logger.transports.file.level = debugMode ? 'verbose' : 'info';
+}
+
+function setupDebugLoggerHook(debugMode) {
+  // Hook logger to send debug and info logs to renderer when debug mode is enabled
+  if (debugMode) {
+    // Hook debug logger
+    if (!originalDebugLogger) {
+      originalDebugLogger = logger.debug.bind(logger);
+    }
+    const originalDebugFn = originalDebugLogger;
+    logger.debug = function(...args) {
+      if (originalDebugFn) {
+        originalDebugFn(...args);
+      }
+      if (!isLoggingToRenderer) {
+        isLoggingToRenderer = true;
+        try {
+          const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+          RendererLogger.log({ messages: [{ text: `[DEBUG] ${message}` }], onOverlay: false });
+        } catch (e) {
+          // Silently fail if RendererLogger isn't ready yet
+        }
+        isLoggingToRenderer = false;
+      }
+    };
+
+    // Hook info logger
+    if (!originalInfoLogger) {
+      originalInfoLogger = logger.info.bind(logger);
+    }
+    const originalInfoFn = originalInfoLogger;
+    logger.info = function(...args) {
+      if (originalInfoFn) {
+        originalInfoFn(...args);
+      }
+      if (!isLoggingToRenderer) {
+        isLoggingToRenderer = true;
+        try {
+          const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+          RendererLogger.log({ messages: [{ text: `[INFO] ${message}` }], onOverlay: false });
+        } catch (e) {
+          // Silently fail if RendererLogger isn't ready yet
+        }
+        isLoggingToRenderer = false;
+      }
+    };
+  } else {
+    // Restore original functions when debug mode is disabled
+    if (originalDebugLogger) {
+      logger.debug = originalDebugLogger;
+    }
+    if (originalInfoLogger) {
+      logger.info = originalInfoLogger;
+    }
+  }
 }
 
 // Initialize logger settings
@@ -593,6 +651,7 @@ class MainProcess {
     SettingsManager.registerListener('overlayPersistenceEnabled', (isOverlayEnabled) => {
       logger.debug(`Setting Overlay Persistence to Enabled:${isOverlayEnabled}`);
       this.sendToOverlay('overlay:set-persistence', isOverlayEnabled);
+      this.sendToMain('settings:overlay-persistence-changed', isOverlayEnabled);
     });
     SettingsManager.registerListener('activeProfile', (newProfile, oldProfile) => {
       if (
@@ -625,11 +684,15 @@ class MainProcess {
       if (newMode !== oldMode) {
         logger.debug(`Setting Debug Mode to Enabled:${newMode}`);
         setLogTransport(newMode);
+        setupDebugLoggerHook(newMode);
       }
     });
 
     AuthManager.setMessenger(this.mainWindow.webContents);
     RendererLogger.init(this.mainWindow.webContents, this.overlayWindow.webContents);
+
+    // Setup debug logger hook after RendererLogger is initialized
+    setupDebugLoggerHook(SettingsManager.get('forceDebugMode'));
   }
 
   /**
@@ -827,13 +890,15 @@ class MainProcess {
       clearTimeout(this.autoUpdaterInterval);
     });
 
-    globalShortcut.register('CommandOrControl+F7', () => {
+    const overlayToggleShortcut = SettingsManager.get('overlayToggleShortcut') || 'CommandOrControl+F7';
+    globalShortcut.register(overlayToggleShortcut, () => {
       logger.info('Toggling overlay visibility');
       const overlayPersistenceEnabled = SettingsManager.get('overlayPersistenceEnabled');
       SettingsManager.set('overlayPersistenceEnabled', !overlayPersistenceEnabled);
     });
 
-    globalShortcut.register('CommandOrControl+F9', () => {
+    const overlayMovementShortcut = SettingsManager.get('overlayMovementShortcut') || 'CommandOrControl+F9';
+    globalShortcut.register(overlayMovementShortcut, () => {
       logger.info(`Toggling overlay movement - ${this.isOverlayMoveable}`);
       this.isOverlayMoveable = !this.isOverlayMoveable;
       this.sendToOverlay('overlay:toggle-movement', { isOverlayMoveable: this.isOverlayMoveable });
@@ -908,9 +973,16 @@ class MainProcess {
       'overlay:get-persistence',
       'items:filters:db-update',
       'update-run-shortcut',
+      'update-screenshot-shortcut',
+      'update-overlay-toggle-shortcut',
+      'update-overlay-movement-shortcut',
     ];
     for (const event of events) {
-      ipcMain.handle(event, Responder[event]);
+      if (event === 'update-overlay-movement-shortcut') {
+        ipcMain.handle(event, (e, newShortcut) => Responder[event](e, newShortcut, this));
+      } else {
+        ipcMain.handle(event, Responder[event]);
+      }
     }
 
     this.handleAutoUpdater();

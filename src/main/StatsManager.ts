@@ -743,7 +743,8 @@ class StatsManager {
     const detectedBosses: string[] = [];
 
     for (const config of BossStatsConfig) {
-      if (run.parsedRunInfo?.[config.key]?.bossFights) {
+      const bossFights = run.parsedRunInfo?.[config.key]?.bossFights;
+      if (bossFights && bossFights.length > 0) {
         detectedBosses.push(config.name);
       } else {
         continue;
@@ -759,13 +760,10 @@ class StatsManager {
 
       const stats = this.stats.bosses[config.key];
       stats.count++;
-      if (run.parsedRunInfo[config.key].bossFights[0].started) {
-        const battleTime = this.getRunningTime(
-          run.parsedRunInfo[config.key].bossFights[0].started,
-          run.parsedRunInfo[config.key].bossFights[
-            run.parsedRunInfo[config.key].bossFights.length - 1
-          ].finished
-        );
+      const firstFight = bossFights[0];
+      const lastFight = bossFights[bossFights.length - 1];
+      if (firstFight?.started && lastFight?.finished) {
+        const battleTime = this.getRunningTime(firstFight.started, lastFight.finished);
         stats.totalTime += battleTime;
         stats.fastest = Number(Math.min(stats.fastest, battleTime));
         stats.deaths += Number(run.parsedRunInfo?.deaths ?? 0);

@@ -73,29 +73,24 @@ const iconMap = {
     };
   },
   betrayalBoss: (info) => {
-    return {
-      condition: !!info.betrayal?.bossFights,
-      icon: CatarinaIcon,
-      alt: `Contained a Betrayal Boss Fight.\nFight lasted ${dayjs(
-        info.betrayal?.bossFights[0].started
-      ).diff(
-        dayjs(info.betrayal?.bossFights[info.betrayal?.bossFights.length - 1]?.finished),
-        'seconds'
-      )} seconds`,
-      additionalIcons: info?.betrayal?.bossFights?.map((fight) => {
+    const bossFights = info.betrayal?.bossFights;
+    const hasBossFights = Array.isArray(bossFights) && bossFights.length > 0;
+    let additionalIcons: JSX.Element[] = [];
+    if (hasBossFights) {
+      const hasTimes = bossFights[0] && bossFights[0].started && bossFights[bossFights.length-1] && bossFights[bossFights.length-1].finished;
+      additionalIcons = bossFights.map((fight) => {
         return (
-          <Tooltip
-            title={`Defeated ${fight.bossName} in ${dayjs(
-              info.betrayal?.bossFights[0].started
-            ).diff(
-              dayjs(info.betrayal?.bossFights[info.betrayal?.bossFights.length - 1]?.finished),
-              'seconds'
-            )} seconds`}
-          >
+          <Tooltip title={hasTimes?`Defeated ${fight.bossName} in ${dayjs(bossFights[0].started).diff(dayjs(bossFights[bossFights.length-1].finished), 'seconds')} seconds`:`Defeated ${fight.bossName}`}>
             <img className="Run-Event__Mini-Icon" src={CatarinaIcon} alt={fight.bossName} />
           </Tooltip>
         );
-      }),
+      });
+    }
+    return {
+      condition: hasBossFights,
+      icon: CatarinaIcon,
+      alt: 'Contained a Betrayal Boss Fight.',
+      additionalIcons: additionalIcons.length > 0 ? additionalIcons : undefined,
     };
   },
   blight: (info) => {

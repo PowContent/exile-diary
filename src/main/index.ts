@@ -799,6 +799,11 @@ class MainProcess {
       return SettingsManager.get('overlayPosition');
     });
 
+    ipcMain.handle('open-file-dialog', async (event, options) => {
+      const result = await dialog.showOpenDialog(this.mainWindow, options);
+      return result;
+    });
+
     ipcMain.on('overlay:set-position', (event, { x, y }) => {
       SettingsManager.set('overlayPosition', { x, y });
     });

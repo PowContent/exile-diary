@@ -11,7 +11,6 @@ import { electronService } from '../../../electron.service';
 import { useNavigate } from 'react-router-dom';
 import MenuItem from '@mui/material/MenuItem';
 import FormHelperText from '@mui/material/FormHelperText';
-import * as path from 'path';
 import { observer } from 'mobx-react-lite';
 const { ipcRenderer } = electronService;
 
@@ -66,7 +65,6 @@ const MainSettings = ({ settings, store, runStore }) => {
 
   // Client File Location
   const [clientFileLocation, setClientFileLocation] = React.useState(settings.clientTxt);
-  const clientFileLocationRef = useRef(clientFileLocation);
   const handleOpenClientLocation = async (e) => {
     e.preventDefault();
     
@@ -92,7 +90,6 @@ const MainSettings = ({ settings, store, runStore }) => {
 
   // Screenshot Folder Location
   const [screenshotLocation, setScreenshotLocation] = React.useState(settings.screenshotDir);
-  const screenshotLocationRef = useRef(screenshotLocation);
   const handleOpenScreenshotLocation = async (e) => {
     e.preventDefault();
     try {

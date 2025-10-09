@@ -129,7 +129,6 @@ const MainSettings = ({ settings, store, runStore }) => {
     settings.overlayMovementShortcut || 'CommandOrControl+F9'
   );
 
-  const [isRecordingShortcut, setIsRecordingShortcut] = React.useState(false);
   const [activeShortcutField, setActiveShortcutField] = React.useState<string | null>(null);
 
   const formatKeyStroke = (event: KeyboardEvent) => {
@@ -177,15 +176,15 @@ const MainSettings = ({ settings, store, runStore }) => {
   };
 
   const handleShortcutKeyDown = (event: React.KeyboardEvent) => {
-    if (!isRecordingShortcut || !activeShortcutField) return;
+    if (!activeShortcutField) return;
 
     event.preventDefault();
     event.stopPropagation();
 
     // Handle Escape key to cancel recording
     if (event.key === 'Escape') {
-      setIsRecordingShortcut(false);
       setActiveShortcutField(null);
+      (event.target as HTMLElement).blur();
       return;
     }
 
@@ -205,19 +204,19 @@ const MainSettings = ({ settings, store, runStore }) => {
           setOverlayMovementShortcut(formatted);
           break;
       }
-      setIsRecordingShortcut(false);
       setActiveShortcutField(null);
+      (event.target as HTMLElement).blur();
     }
   };
 
-  const handleShortcutClick = (fieldName: string) => {
-    setIsRecordingShortcut(true);
+  const handleShortcutFocus = (fieldName: string) => {
+    ipcRenderer.send('hotkeys:disable');
     setActiveShortcutField(fieldName);
   };
 
   const handleShortcutBlur = () => {
-    setIsRecordingShortcut(false);
     setActiveShortcutField(null);
+    ipcRenderer.send('hotkeys:enable');
   };
 
   const getShortcutValue = (fieldName: string) => {
@@ -246,28 +245,36 @@ const MainSettings = ({ settings, store, runStore }) => {
   }) => {
     const isActiveField = activeShortcutField === fieldName;
     const currentValue = getShortcutValue(fieldName);
+    const inputRef = React.useRef<HTMLInputElement>(null);
+
+    React.useEffect(() => {
+      if (isActiveField) {
+        inputRef.current?.focus();
+      }
+    }, [isActiveField]);
 
     return (
       <TextField
+        inputRef={inputRef}
         fullWidth
-        label={isRecordingShortcut && isActiveField ? "Press your desired key combination..." : label}
+        label={isActiveField ? "Press your desired key combination..." : label}
         name={`${fieldName}_shortcut`}
         variant="filled"
         size="small"
-        value={isRecordingShortcut && isActiveField ? "Recording..." : currentValue}
-        onChange={(e) => !isRecordingShortcut && setShortcutValue(fieldName, e.target.value)}
+        value={isActiveField ? "Recording..." : currentValue}
         onKeyDown={handleShortcutKeyDown}
-        onClick={() => handleShortcutClick(fieldName)}
+        onFocus={() => handleShortcutFocus(fieldName)}
         onBlur={handleShortcutBlur}
         helperText={
-          isRecordingShortcut && isActiveField
+          isActiveField
             ? "Press any key combination (e.g., Ctrl+F10, Alt+R). Press Escape to cancel."
             : helperText
         }
         InputProps={{
+          readOnly: true,
           style: {
-            backgroundColor: isRecordingShortcut && isActiveField ? '#ffebee' : undefined,
-            color: isRecordingShortcut && isActiveField ? '#d32f2f' : undefined
+            backgroundColor: isActiveField ? '#ffebee' : undefined,
+            color: isActiveField ? '#d32f2f' : undefined
           }
         }}
       />
@@ -337,12 +344,6 @@ const MainSettings = ({ settings, store, runStore }) => {
 
     // Save settings
     await ipcRenderer.invoke('save-settings', { settings: data });
-
-    // Update all shortcuts immediately
-    await ipcRenderer.invoke('update-run-shortcut', runParseShortcut);
-    await ipcRenderer.invoke('update-screenshot-shortcut', screenshotShortcut);
-    await ipcRenderer.invoke('update-overlay-toggle-shortcut', overlayToggleShortcut);
-    await ipcRenderer.invoke('update-overlay-movement-shortcut', overlayMovementShortcut);
   };
 
   const handleRefreshCharacters = () => {

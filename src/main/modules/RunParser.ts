@@ -15,7 +15,7 @@ const EventEmitter = require('events');
 const ItemPricer = require('./ItemPricer');
 const XPTracker = require('./XPTracker');
 const Constants = require('../../helpers/constants').default;
-let ParseShortcut = 'CommandOrControl+F10'; 
+ 
 dayjs.extend(minMax);
 
 type ParsedEvent = {
@@ -1096,46 +1096,7 @@ const RunParser = {
     });
   },
 
-  ParseShortcut, // Exposed for testing
 
-  registerRunParseShortcut: () => {
-    // Make sure we get the current shortcut from settings
-    ParseShortcut = SettingsManager.get('runParseShortcut') || 'CommandOrControl+F10';
-    logger.info(`Registering run parse shortcut: ${ParseShortcut}`);
-    globalShortcut.register(ParseShortcut, () => {
-      logger.info('Run parse shortcut pressed');
-      const event = { timestamp: dayjs().toISOString() };
-      logger.debug('Calling tryProcess with event:', event);
-      RunParser.tryProcess({ event });
-    });
-  },
-
-  unregisterRunParseShortcut: () => {
-    logger.debug(`Unregistering run parse shortcut: ${ParseShortcut}`);
-    globalShortcut.unregister(ParseShortcut);
-  },
-
-  updateShortcut: (newShortcut: string) => {
-    logger.debug(`Updating shortcut from ${ParseShortcut} to ${newShortcut}`);
-    // Unregister old shortcut
-    RunParser.unregisterRunParseShortcut();
-    // Update the shortcut
-    ParseShortcut = newShortcut;
-    // Register new shortcut if it's enabled
-    const isEnabled = SettingsManager.get('runParseScreenshotEnabled');
-    logger.debug(`Shortcut enabled: ${isEnabled}`);
-    if (isEnabled) {
-      RunParser.registerRunParseShortcut();
-    }
-  },
-
-  toggleRunParseShortcut: (state) => {
-    if (state) {
-      RunParser.registerRunParseShortcut();
-    } else {
-      RunParser.unregisterRunParseShortcut();
-    }
-  },
 
   getAreaFromId: (areaId: string): any => {
     logger.info(`Getting area name for ID: ${areaId}`);

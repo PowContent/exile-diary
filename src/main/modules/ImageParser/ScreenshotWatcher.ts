@@ -22,7 +22,7 @@ const ProcessingTimeout = 15000;
 
 // const SCREENSHOT_DIRECTORY_SIZE_LIMIT = 400;
 const sizeMultiplier = 3; // We read pixels from a screenshot that is in 1920x1080 * this multiplier
-let customShortcutTrigger = 'CommandOrControl+F8';
+
 let watcher: FSWatcher | null;
 const emitter = new EventEmitter();
 
@@ -442,60 +442,25 @@ function unregisterWatcher() {
   }
 }
 
-function registerCustomShortcut() {
-  logger.info('Registering custom screenshot shortcut');
 
-  globalShortcut.register(customShortcutTrigger, async () => {
-    logger.info('Screenshot shortcut pressed');
-    emitter.emit('screenshot:capture');
-  });
-}
-
-function unregisterCustomShortcut() {
-  logger.info('Unregistering custom screenshot shortcut');
-  globalShortcut.unregister(customShortcutTrigger);
-}
-
-function updateShortcut(newShortcut: string) {
-  logger.info(`Updating screenshot shortcut from ${customShortcutTrigger} to ${newShortcut}`);
-  // Unregister old shortcut
-  globalShortcut.unregister(customShortcutTrigger);
-  // Update the shortcut
-  customShortcutTrigger = newShortcut;
-  // Register new shortcut if it's enabled
-  const settings = SettingsManager.getAll();
-  const isEnabled = settings.screenshots?.allowCustomShortcut;
-  if (isEnabled) {
-    registerCustomShortcut();
-  }
-}
 
 function registerListener() {
   SettingsManager.registerListener('screenshots', (value) => {
-    const { allowCustomShortcut, allowFolderWatch, screenshotDir } = value;
+    const { allowFolderWatch, screenshotDir } = value;
 
     if (allowFolderWatch && screenshotDir) {
       registerWatcher(screenshotDir);
     } else {
       unregisterWatcher();
     }
-
-    if (allowCustomShortcut) {
-      registerCustomShortcut();
-    } else {
-      unregisterCustomShortcut();
-    }
   });
 }
 
 function start() {
   unregisterWatcher();
-  unregisterCustomShortcut();
   registerListener();
 
   const settings = SettingsManager.getAll();
-  // Initialize shortcut from settings
-  customShortcutTrigger = settings.screenshotShortcut || 'CommandOrControl+F8';
 
   if (!settings.screenshots) {
     const oldDir = settings.screenshotDir;
@@ -517,16 +482,10 @@ function start() {
   } else {
     logger.info('Screenshot directory is disabled');
   }
-
-  if (screenshotsSettings.allowCustomShortcut) {
-    registerCustomShortcut();
-    logger.info('Custom shortcut is enabled');
-  }
 }
 
 export default {
   start,
   emitter,
   process: processScreenshot,
-  updateShortcut,
 };

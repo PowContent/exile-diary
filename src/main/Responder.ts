@@ -170,54 +170,7 @@ const saveFilterSettings = async (e, params) => {
   RendererLogger.log({ messages: [{ text: 'Filter settings saved' }] });
 };
 
-const updateRunShortcut = async (e, newShortcut) => {
-  logger.info('Updating run shortcut to:', newShortcut);
-  const RunParser = require('./modules/RunParser').default;
-  RunParser.updateShortcut(newShortcut);
-  return;
-};
 
-const updateScreenshotShortcut = async (e, newShortcut) => {
-  logger.info('Updating screenshot shortcut to:', newShortcut);
-  const ScreenshotWatcher = require('./modules/ImageParser/ScreenshotWatcher').default;
-  ScreenshotWatcher.updateShortcut(newShortcut);
-  return;
-};
-
-const updateOverlayToggleShortcut = async (e, newShortcut) => {
-  logger.info('Updating overlay toggle shortcut to:', newShortcut);
-  const { globalShortcut } = require('electron');
-  const currentShortcut = SettingsManager.get('overlayToggleShortcut') || 'CommandOrControl+F7';
-  globalShortcut.unregister(currentShortcut);
-  SettingsManager.set('overlayToggleShortcut', newShortcut);
-  globalShortcut.register(newShortcut, () => {
-    logger.info('Toggling overlay visibility');
-    const overlayPersistenceEnabled = SettingsManager.get('overlayPersistenceEnabled');
-    SettingsManager.set('overlayPersistenceEnabled', !overlayPersistenceEnabled);
-  });
-  return;
-};
-
-const updateOverlayMovementShortcut = async (e, newShortcut, mainProcessInstance) => {
-  logger.info('Updating overlay movement shortcut to:', newShortcut);
-  const { globalShortcut } = require('electron');
-  const currentShortcut = SettingsManager.get('overlayMovementShortcut') || 'CommandOrControl+F9';
-  globalShortcut.unregister(currentShortcut);
-  SettingsManager.set('overlayMovementShortcut', newShortcut);
-
-  // Register the new shortcut
-  if (mainProcessInstance) {
-    globalShortcut.register(newShortcut, () => {
-      logger.info(`Toggling overlay movement - ${mainProcessInstance.isOverlayMoveable}`);
-      mainProcessInstance.isOverlayMoveable = !mainProcessInstance.isOverlayMoveable;
-      mainProcessInstance.sendToOverlay('overlay:toggle-movement', { isOverlayMoveable: mainProcessInstance.isOverlayMoveable });
-    });
-    logger.info('Overlay movement shortcut updated successfully.');
-  } else {
-    logger.info('Overlay movement shortcut updated. Restart required for changes to take effect.');
-  }
-  return;
-};
 
 const triggerSearch = async (e, params) => {
   logger.info('Triggering search from the renderer process');
@@ -282,10 +235,6 @@ const Responder = {
   'save-settings:stashtabs': saveStashTabs,
   'save-settings:stash-refresh-interval': saveStashRefreshInterval,
   'save-settings:filters': saveFilterSettings,
-  'update-run-shortcut': updateRunShortcut,
-  'update-screenshot-shortcut': updateScreenshotShortcut,
-  'update-overlay-toggle-shortcut': updateOverlayToggleShortcut,
-  'update-overlay-movement-shortcut': updateOverlayMovementShortcut,
   'oauth:get-info': getAuthInfo,
   'oauth:is-authenticated': isAuthenticated,
   'oauth:logout': logout,

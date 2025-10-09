@@ -204,6 +204,50 @@ class MainProcess {
     this.isOverlayMoveable = false;
   }
 
+  registerGlobalShortcuts() {
+    logger.info('Registering global shortcuts');
+
+    // Overlay Toggle Shortcut
+    const overlayToggleShortcut = SettingsManager.get('overlayToggleShortcut') || 'CommandOrControl+F7';
+    globalShortcut.register(overlayToggleShortcut, () => {
+      logger.info('Toggling overlay visibility');
+      const overlayPersistenceEnabled = SettingsManager.get('overlayPersistenceEnabled');
+      SettingsManager.set('overlayPersistenceEnabled', !overlayPersistenceEnabled);
+    });
+
+    // Overlay Movement Shortcut
+    const overlayMovementShortcut = SettingsManager.get('overlayMovementShortcut') || 'CommandOrControl+F9';
+    globalShortcut.register(overlayMovementShortcut, () => {
+      logger.info(`Toggling overlay movement - ${this.isOverlayMoveable}`);
+      this.isOverlayMoveable = !this.isOverlayMoveable;
+      this.sendToOverlay('overlay:toggle-movement', { isOverlayMoveable: this.isOverlayMoveable });
+    });
+
+    // Run Parse Shortcut
+    const runParseShortcut = SettingsManager.get('runParseShortcut') || 'CommandOrControl+F10';
+    if (SettingsManager.get('runParseScreenshotEnabled')) {
+      globalShortcut.register(runParseShortcut, () => {
+        logger.info('Run parse shortcut pressed');
+        const event = { timestamp: dayjs().toISOString() };
+        RunParser.tryProcess({ event });
+      });
+    }
+
+    // Screenshot Shortcut
+    const screenshotShortcut = SettingsManager.get('screenshotShortcut') || 'CommandOrControl+F8';
+    if (SettingsManager.get('screenshots')?.allowCustomShortcut) {
+      globalShortcut.register(screenshotShortcut, () => {
+        logger.info('Screenshot shortcut pressed');
+        ScreenshotWatcher.emitter.emit('screenshot:capture');
+      });
+    }
+  }
+
+  unregisterGlobalShortcuts() {
+    logger.info('Unregistering all global shortcuts');
+    globalShortcut.unregisterAll();
+  }
+
   async init() {
     logger.info('Initializing components');
 
@@ -540,9 +584,13 @@ class MainProcess {
       RunParser.refreshTracking();
       StatsManager.triggerProfitPerHourAnnouncer();
     });
-    RunParser.toggleRunParseShortcut(SettingsManager.get('runParseScreenshotEnabled'));
     SettingsManager.registerListener('runParseScreenshotEnabled', (enabled) => {
-      RunParser.toggleRunParseShortcut(enabled);
+      this.unregisterGlobalShortcuts();
+      this.registerGlobalShortcuts();
+    });
+    SettingsManager.registerListener('screenshots', (value) => {
+      this.unregisterGlobalShortcuts();
+      this.registerGlobalShortcuts();
     });
     // Shortcut updates are now handled directly via IPC
 
@@ -884,25 +932,7 @@ class MainProcess {
       SettingsManager.set('overlayPosition', { x, y });
     });
 
-    app.on('will-quit', () => {
-      logger.info('Exile Diary Reborn is closing');
-      clearTimeout(this.saveBoundsCallback);
-      clearTimeout(this.autoUpdaterInterval);
-    });
 
-    const overlayToggleShortcut = SettingsManager.get('overlayToggleShortcut') || 'CommandOrControl+F7';
-    globalShortcut.register(overlayToggleShortcut, () => {
-      logger.info('Toggling overlay visibility');
-      const overlayPersistenceEnabled = SettingsManager.get('overlayPersistenceEnabled');
-      SettingsManager.set('overlayPersistenceEnabled', !overlayPersistenceEnabled);
-    });
-
-    const overlayMovementShortcut = SettingsManager.get('overlayMovementShortcut') || 'CommandOrControl+F9';
-    globalShortcut.register(overlayMovementShortcut, () => {
-      logger.info(`Toggling overlay movement - ${this.isOverlayMoveable}`);
-      this.isOverlayMoveable = !this.isOverlayMoveable;
-      this.sendToOverlay('overlay:toggle-movement', { isOverlayMoveable: this.isOverlayMoveable });
-    });
   }
 
   refreshWindows() {
@@ -972,22 +1002,23 @@ class MainProcess {
       'debug:fetch-stash-tabs',
       'overlay:get-persistence',
       'items:filters:db-update',
-      'update-run-shortcut',
-      'update-screenshot-shortcut',
-      'update-overlay-toggle-shortcut',
-      'update-overlay-movement-shortcut',
     ];
     for (const event of events) {
-      if (event === 'update-overlay-movement-shortcut') {
-        ipcMain.handle(event, (e, newShortcut) => Responder[event](e, newShortcut, this));
-      } else {
-        ipcMain.handle(event, Responder[event]);
-      }
+      ipcMain.handle(event, Responder[event]);
     }
 
     this.handleAutoUpdater();
     this.setupListeners();
     this.setupResizer();
+
+    this.registerGlobalShortcuts();
+
+    ipcMain.on('hotkeys:disable', () => {
+      this.unregisterGlobalShortcuts();
+    });
+    ipcMain.on('hotkeys:enable', () => {
+      this.registerGlobalShortcuts();
+    });
 
     const test = 2;
 

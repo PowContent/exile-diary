@@ -486,6 +486,7 @@ class MainProcess {
     SettingsManager.registerListener('runParseScreenshotEnabled', (enabled) => {
       RunParser.toggleRunParseShortcut(enabled);
     });
+    // Shortcut updates are now handled directly via IPC
 
     KillTracker.emitter.removeAllListeners();
     KillTracker.emitter.on('incubatorsUpdated', (incubators) => {
@@ -906,6 +907,7 @@ class MainProcess {
       'debug:fetch-stash-tabs',
       'overlay:get-persistence',
       'items:filters:db-update',
+      'update-run-shortcut',
     ];
     for (const event of events) {
       ipcMain.handle(event, Responder[event]);

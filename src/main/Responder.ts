@@ -170,6 +170,13 @@ const saveFilterSettings = async (e, params) => {
   RendererLogger.log({ messages: [{ text: 'Filter settings saved' }] });
 };
 
+const updateRunShortcut = async (e, newShortcut) => {
+  logger.info('Updating run shortcut to:', newShortcut);
+  const RunParser = require('./modules/RunParser').default;
+  RunParser.updateShortcut(newShortcut);
+  return;
+};
+
 const triggerSearch = async (e, params) => {
   logger.info('Triggering search from the renderer process');
   SearchManager.search(params);
@@ -233,6 +240,7 @@ const Responder = {
   'save-settings:stashtabs': saveStashTabs,
   'save-settings:stash-refresh-interval': saveStashRefreshInterval,
   'save-settings:filters': saveFilterSettings,
+  'update-run-shortcut': updateRunShortcut,
   'oauth:get-info': getAuthInfo,
   'oauth:is-authenticated': isAuthenticated,
   'oauth:logout': logout,

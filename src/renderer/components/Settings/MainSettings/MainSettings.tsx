@@ -115,6 +115,83 @@ const MainSettings = ({ settings, store, runStore }) => {
     settings.autoScreenshotOnMapEntry?.delay || 2
   );
 
+  // Run parse shortcut
+  const [runParseShortcut, setRunParseShortcut] = React.useState(
+    settings.runParseShortcut || 'CommandOrControl+F10'
+  );
+  const [isRecordingShortcut, setIsRecordingShortcut] = React.useState(false);
+
+  const formatKeyStroke = (event: KeyboardEvent) => {
+    const modifiers: string[] = [];
+    if (event.ctrlKey || event.metaKey) modifiers.push('CommandOrControl');
+    if (event.altKey) modifiers.push('Alt');
+    if (event.shiftKey) modifiers.push('Shift');
+
+    let key = event.key;
+
+    // Handle special keys
+    const keyMap: { [key: string]: string } = {
+      ' ': 'Space',
+      'ArrowUp': 'Up',
+      'ArrowDown': 'Down',
+      'ArrowLeft': 'Left',
+      'ArrowRight': 'Right',
+      'Enter': 'Return',
+      'Backspace': 'Backspace',
+      'Delete': 'Delete',
+      'Tab': 'Tab',
+      'Insert': 'Insert',
+      'Home': 'Home',
+      'End': 'End',
+      'PageUp': 'PageUp',
+      'PageDown': 'PageDown',
+    };
+
+    if (keyMap[key]) {
+      key = keyMap[key];
+    } else if (key.startsWith('F') && /^F[0-9]+$/.test(key)) {
+      // F1, F2, etc. - keep as is
+    } else if (key.length === 1) {
+      key = key.toUpperCase();
+    } else if (key === 'Control' || key === 'Alt' || key === 'Shift' || key === 'Meta') {
+      return null; // Don't capture modifier keys alone
+    }
+
+    // Require at least one modifier for most keys (except function keys and special keys)
+    if (modifiers.length === 0 && !key.startsWith('F') && !keyMap[event.key]) {
+      return null;
+    }
+
+    return modifiers.length > 0 ? `${modifiers.join('+')}+${key}` : key;
+  };
+
+  const handleShortcutKeyDown = (event: React.KeyboardEvent) => {
+    if (!isRecordingShortcut) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Handle Escape key to cancel recording
+    if (event.key === 'Escape') {
+      setIsRecordingShortcut(false);
+      return;
+    }
+
+    const formatted = formatKeyStroke(event.nativeEvent);
+    if (formatted) {
+      setRunParseShortcut(formatted);
+      setIsRecordingShortcut(false);
+    }
+  };
+
+  const handleShortcutFocus = () => {
+    setIsRecordingShortcut(true);
+  };
+
+  const handleShortcutBlur = () => {
+    setIsRecordingShortcut(false);
+  };
+
   const handleRedirectToLogin = () => {
     navigate('/login');
   };
@@ -139,12 +216,13 @@ const MainSettings = ({ settings, store, runStore }) => {
     navigate('/');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    const selectedChar = store.characters.find((char: any) => char.name === character);
     const data = {
       activeProfile: {
         characterName: character,
-        league: store.characters.find((char: any) => char.name === character).league,
+        league: selectedChar ? selectedChar.league : league,
         leagueOverride: leagueOverride,
         valid: true,
       },
@@ -164,8 +242,17 @@ const MainSettings = ({ settings, store, runStore }) => {
         enabled: e.target.enable_auto_screenshot_on_map_entry.checked,
         delay: autoScreenshotDelay,
       },
+<<<<<<< Updated upstream
+=======
+      runParseShortcut: runParseShortcut,
+>>>>>>> Stashed changes
     };
-    ipcRenderer.invoke('save-settings', { settings: data });
+
+    // Save settings
+    await ipcRenderer.invoke('save-settings', { settings: data });
+
+    // Update the shortcut immediately
+    await ipcRenderer.invoke('update-run-shortcut', runParseShortcut);
   };
 
   const handleRefreshCharacters = () => {
@@ -356,7 +443,57 @@ const MainSettings = ({ settings, store, runStore }) => {
                 defaultChecked={runParseScreenshotEnabled}
               />
             }
-            label="Enable shortcut to finish a run (CTRL+F10)"
+            label="Enable shortcut to finish a run"
+          />
+        </div>
+        <div className="Settings__Row">
+          <TextField
+            fullWidth
+            label={isRecordingShortcut ? "Press your desired key combination..." : "Run Parse Shortcut"}
+            name="run_parse_shortcut"
+            variant="filled"
+            size="small"
+            value={isRecordingShortcut ? "Recording..." : runParseShortcut}
+            onChange={(e) => !isRecordingShortcut && setRunParseShortcut(e.target.value)}
+            onKeyDown={handleShortcutKeyDown}
+            onFocus={handleShortcutFocus}
+            onBlur={handleShortcutBlur}
+            helperText={
+              isRecordingShortcut
+                ? "Press any key combination (e.g., Ctrl+F10, Alt+R). Press Escape to cancel."
+                : "Click to record a key combination, or type manually (e.g., CommandOrControl+F10)"
+            }
+            InputProps={{
+              style: {
+                backgroundColor: isRecordingShortcut ? '#ffebee' : undefined,
+                color: isRecordingShortcut ? '#d32f2f' : undefined
+              }
+            }}
+          />
+        </div>
+        <div className="Settings__Checkbox__Row">
+          <FormControlLabel
+            control={
+              <Checkbox
+                id="enable_auto_screenshot_on_map_entry"
+                defaultChecked={!!settings.autoScreenshotOnMapEntry?.enabled}
+              />
+            }
+            label="Enable auto-screenshot when entering maps"
+          />
+        </div>
+        <div className="Settings__Row">
+          <TextField
+            fullWidth
+            label="Auto-screenshot delay (seconds) - time to wait after entering map"
+            id="auto_screenshot_delay"
+            variant="filled"
+            size="small"
+            type="number"
+            inputProps={{ min: 0, max: 30, step: 0.5 }}
+            value={autoScreenshotDelay}
+            onChange={(e) => setAutoScreenshotDelay(parseFloat(e.target.value) || 0)}
+            helperText="Delay in seconds to account for loading times (0-30 seconds)"
           />
         </div>
         <div className="Settings__Checkbox__Row">

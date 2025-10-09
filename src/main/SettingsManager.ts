@@ -41,6 +41,7 @@ const DefaultSettings = {
     perCategory: {},
   },
   runParseScreenshotEnabled: true,
+  runParseShortcut: 'CommandOrControl+F10',
 };
 
 class SettingsManager {
